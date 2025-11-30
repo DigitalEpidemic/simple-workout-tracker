@@ -33,6 +33,7 @@ React Native workout tracking application built with TypeScript, following offli
 - Offline-first approach
 - No cross-feature dependencies
 - Shared code in `lib/`, `stores/`, and top-level `components/`
+- **NO barrel files (index.ts/tsx for re-exports)** - Import directly from named files (e.g., `import { Button } from '@/components/ui/button'`, NOT `from '@/components/ui'`)
 
 **Existing structure to preserve:**
 - Top-level `components/` folder
@@ -74,7 +75,7 @@ React Native workout tracking application built with TypeScript, following offli
 ### Phase 1 – Base Architecture
 - **1.1** ✅ Project folder structure → `project_plan/1.1-folder-structure.md`
 - **1.2** ✅ Expo Router navigation setup → `project_plan/1.2-expo-router-notes.md`
-- **1.3** ⏳ App theme
+- **1.3** ✅ App theme
 - **1.4** ⏳ SQLite schema + migrations
 - **1.5** ⏳ Database helper utilities
 
@@ -138,6 +139,7 @@ For each phase implementation:
 - ❌ Do not skip error handling or validation
 - ❌ Do not use network-dependent features (except Phase 5)
 - ❌ Do not modify existing working boilerplate without reason
+- ❌ Do not create barrel files (index.ts/tsx for re-exports) - always import from named files directly
 
 ---
 
@@ -154,15 +156,16 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 1.2 (Expo Router navigation setup)
+**Last Completed Phase:** 1.3 (App theme)
 
-**Next Phase:** 1.3 (App theme)
+**Next Phase:** 1.4 (SQLite schema + migrations)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
 - **Business Logic:** Feature modules in `src/features/`
 - **Shared Code:** `src/lib/` and `src/stores/`
 - **UI Components:** Top-level `components/` folder
+- **Theme System:** `constants/theme.ts` with design tokens and UI primitives in `components/ui/`
 
 **Navigation Structure:**
 ```
