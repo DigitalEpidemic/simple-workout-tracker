@@ -80,7 +80,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **1.5** ✅ Database helper utilities
 
 ### Phase 2 – Template System
-- **2.1** ⏳ CRUD for workout templates
+- **2.1** ✅ CRUD for workout templates
 - **2.2** ⏳ Template selection screen
 - **2.3** ⏳ Starting a workout from a template
 
@@ -96,6 +96,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **4.3** ⏳ Exercise history + previous set autofill
 - **4.4** ⏳ Analytics charts
 - **4.5** ⏳ PR system
+- **4.6** ⏳ User settings (weight unit toggle: lbs/kg, default rest timer)
 
 ### Phase 5 – Sync
 - **5.1** ⏳ Firebase setup
@@ -140,6 +141,7 @@ For each phase implementation:
 - ❌ Do not use network-dependent features (except Phase 5)
 - ❌ Do not modify existing working boilerplate without reason
 - ❌ Do not create barrel files (index.ts/tsx for re-exports) - always import from named files directly
+- ❌ Do not use "kg" for weight units - use "lbs" until Phase 4.6 implements user settings
 
 ---
 
@@ -156,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 1.5 (Database helper utilities)
+**Last Completed Phase:** 2.1 (CRUD for workout templates)
 
-**Next Phase:** 2.1 (CRUD for workout templates)
+**Next Phase:** 2.2 (Template selection screen)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
@@ -166,6 +168,7 @@ For each phase implementation:
 - **Shared Code:** `src/lib/` and `src/stores/`
 - **UI Components:** Top-level `components/` folder
 - **Theme System:** `constants/theme.ts` with design tokens and UI primitives in `components/ui/`
+- **Weight Units:** Currently hardcoded to **lbs** throughout the app until Phase 4.6 implements user settings for weight unit toggle
 
 **Navigation Structure:**
 ```

@@ -1,5 +1,8 @@
 /**
  * Core TypeScript interfaces for the workout tracking application
+ *
+ * @note Weight values (targetWeight, weight) are stored as numeric values without units.
+ *       UI currently displays all weights in lbs until Phase 4.6 implements user settings.
  */
 
 /**

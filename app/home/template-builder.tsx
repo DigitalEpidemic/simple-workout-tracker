@@ -1,73 +1,370 @@
-import React from 'react';
-import { StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { AddExerciseButton } from '@/components/add-exercise-button';
-
 /**
- * Template Builder Screen - Create or edit workout templates
+ * Template Builder Screen
  *
+ * Create or edit workout templates with full CRUD operations.
  * Features:
- * - Create or edit workout template
- * - Set template name
+ * - Create/Edit template with name and description
  * - Add/remove/reorder exercises
- * - Configure default sets/reps for each exercise
- * - Save or cancel template
+ * - Set target sets, reps, weight for each exercise
+ * - Validation and error handling
+ * - Save to SQLite database
  */
+
+import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+} from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import {
+  fetchTemplateById,
+  createNewTemplate,
+  updateExistingTemplate,
+  validateTemplateName,
+  validateExerciseName,
+  validateExerciseTargets,
+} from '@/src/features/templates/api/templateService';
+import { ExerciseListItem } from '@/src/features/templates/components/ExerciseListItem';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+interface ExerciseForm {
+  id?: string;
+  name: string;
+  order: number;
+  targetSets?: number;
+  targetReps?: number;
+  targetWeight?: number;
+  notes?: string;
+}
+
 export default function TemplateBuilderScreen() {
   const router = useRouter();
   const { templateId } = useLocalSearchParams<{ templateId?: string }>();
-  const [templateName, setTemplateName] = React.useState('');
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
 
   const isEditing = !!templateId;
 
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [exercises, setExercises] = useState<ExerciseForm[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const [showExerciseModal, setShowExerciseModal] = useState(false);
+  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
+  const [exerciseFormName, setExerciseFormName] = useState('');
+  const [exerciseFormSets, setExerciseFormSets] = useState('');
+  const [exerciseFormReps, setExerciseFormReps] = useState('');
+  const [exerciseFormWeight, setExerciseFormWeight] = useState('');
+  const [exerciseFormNotes, setExerciseFormNotes] = useState('');
+
+  useEffect(() => {
+    if (isEditing && templateId) {
+      loadTemplate(templateId);
+    }
+  }, [templateId]);
+
+  const loadTemplate = async (id: string) => {
+    try {
+      const template = await fetchTemplateById(id);
+      if (template) {
+        setTemplateName(template.name);
+        setTemplateDescription(template.description || '');
+        setExercises(
+          template.exercises.map((ex, idx) => ({
+            id: ex.id,
+            name: ex.name,
+            order: idx,
+            targetSets: ex.targetSets,
+            targetReps: ex.targetReps,
+            targetWeight: ex.targetWeight,
+            notes: ex.notes,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error loading template:', error);
+      Alert.alert('Error', 'Failed to load template');
+    }
+  };
+
+  const handleAddExercise = () => {
+    setEditingExerciseIndex(null);
+    setExerciseFormName('');
+    setExerciseFormSets('');
+    setExerciseFormReps('');
+    setExerciseFormWeight('');
+    setExerciseFormNotes('');
+    setShowExerciseModal(true);
+  };
+
+  const handleEditExercise = (index: number) => {
+    const exercise = exercises[index];
+    setEditingExerciseIndex(index);
+    setExerciseFormName(exercise.name);
+    setExerciseFormSets(exercise.targetSets?.toString() || '');
+    setExerciseFormReps(exercise.targetReps?.toString() || '');
+    setExerciseFormWeight(exercise.targetWeight?.toString() || '');
+    setExerciseFormNotes(exercise.notes || '');
+    setShowExerciseModal(true);
+  };
+
+  const handleSaveExercise = () => {
+    const nameError = validateExerciseName(exerciseFormName);
+    if (nameError) {
+      Alert.alert('Invalid Exercise Name', nameError);
+      return;
+    }
+
+    const sets = exerciseFormSets ? parseInt(exerciseFormSets, 10) : undefined;
+    const reps = exerciseFormReps ? parseInt(exerciseFormReps, 10) : undefined;
+    const weight = exerciseFormWeight ? parseFloat(exerciseFormWeight) : undefined;
+
+    const targetsError = validateExerciseTargets(sets, reps, weight);
+    if (targetsError) {
+      Alert.alert('Invalid Targets', targetsError);
+      return;
+    }
+
+    if (editingExerciseIndex !== null) {
+      const updated = [...exercises];
+      updated[editingExerciseIndex] = {
+        ...updated[editingExerciseIndex],
+        name: exerciseFormName.trim(),
+        targetSets: sets,
+        targetReps: reps,
+        targetWeight: weight,
+        notes: exerciseFormNotes.trim() || undefined,
+      };
+      setExercises(updated);
+    } else {
+      const newExercise: ExerciseForm = {
+        name: exerciseFormName.trim(),
+        order: exercises.length,
+        targetSets: sets,
+        targetReps: reps,
+        targetWeight: weight,
+        notes: exerciseFormNotes.trim() || undefined,
+      };
+      setExercises([...exercises, newExercise]);
+    }
+
+    setShowExerciseModal(false);
+  };
+
+  const handleRemoveExercise = (index: number) => {
+    Alert.alert(
+      'Remove Exercise',
+      `Remove "${exercises[index].name}" from template?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            const updated = exercises
+              .filter((_, i) => i !== index)
+              .map((ex, idx) => ({ ...ex, order: idx }));
+            setExercises(updated);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSaveTemplate = async () => {
+    const nameError = validateTemplateName(templateName);
+    if (nameError) {
+      Alert.alert('Invalid Template Name', nameError);
+      return;
+    }
+
+    if (exercises.length === 0) {
+      Alert.alert('No Exercises', 'Please add at least one exercise to the template');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (isEditing && templateId) {
+        await updateExistingTemplate(
+          templateId,
+          templateName.trim(),
+          templateDescription.trim() || undefined,
+          exercises
+        );
+      } else {
+        await createNewTemplate(
+          templateName.trim(),
+          templateDescription.trim() || undefined,
+          exercises
+        );
+      }
+
+      router.back();
+    } catch (error) {
+      console.error('Error saving template:', error);
+      Alert.alert('Error', 'Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <Pressable onPress={() => router.back()}>
-            <IconSymbol size={28} name="chevron.left" color="#007AFF" />
-          </Pressable>
-          <ThemedText type="title">
-            {isEditing ? 'Edit Template' : 'New Template'}
-          </ThemedText>
-        </ThemedView>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {isEditing ? 'Edit Template' : 'New Template'}
+        </Text>
+      </View>
 
-        <ThemedView style={styles.content}>
-          <ThemedView style={styles.inputGroup}>
-            <ThemedText style={styles.label}>Template Name</ThemedText>
-            <TextInput
-              style={styles.input}
-              value={templateName}
-              onChangeText={setTemplateName}
-              placeholder="e.g., Push Day, Leg Day"
-              placeholderTextColor="rgba(128, 128, 128, 0.5)"
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <Input
+          label="Template Name"
+          value={templateName}
+          onChangeText={setTemplateName}
+          placeholder="e.g., Push Day, Leg Day"
+          containerStyle={styles.inputContainer}
+        />
+
+        <Input
+          label="Description (Optional)"
+          value={templateDescription}
+          onChangeText={setTemplateDescription}
+          placeholder="Notes about this workout"
+          multiline
+          numberOfLines={3}
+          containerStyle={styles.inputContainer}
+        />
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Exercises ({exercises.length})
+          </Text>
+
+          {exercises.map((exercise, index) => (
+            <ExerciseListItem
+              key={index}
+              exercise={exercise}
+              index={index}
+              onPress={() => handleEditExercise(index)}
+              onRemove={() => handleRemoveExercise(index)}
             />
-          </ThemedView>
+          ))}
 
-          <ThemedView style={styles.section}>
-            <ThemedText type="subtitle">Exercises</ThemedText>
-            <AddExerciseButton />
-
-            <ThemedText style={styles.emptyState}>
-              No exercises added yet. Tap &ldquo;Add Exercise&rdquo; to get started!
-            </ThemedText>
-          </ThemedView>
-        </ThemedView>
+          <Button
+            title="Add Exercise"
+            variant="outline"
+            onPress={handleAddExercise}
+            fullWidth
+          />
+        </View>
       </ScrollView>
 
-      <ThemedView style={styles.footer}>
-        <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-          <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-        </Pressable>
-        <Pressable style={styles.saveButton}>
-          <ThemedText style={styles.saveButtonText}>Save Template</ThemedText>
-        </Pressable>
-      </ThemedView>
-    </ThemedView>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Button
+          title="Cancel"
+          variant="ghost"
+          onPress={() => router.back()}
+          style={styles.footerButton}
+        />
+        <Button
+          title={isEditing ? 'Update Template' : 'Save Template'}
+          onPress={handleSaveTemplate}
+          loading={saving}
+          style={styles.footerButton}
+        />
+      </View>
+
+      <Modal
+        visible={showExerciseModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowExerciseModal(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {editingExerciseIndex !== null ? 'Edit Exercise' : 'Add Exercise'}
+            </Text>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <Input
+              label="Exercise Name"
+              value={exerciseFormName}
+              onChangeText={setExerciseFormName}
+              placeholder="e.g., Bench Press, Squat"
+              containerStyle={styles.inputContainer}
+            />
+
+            <View style={styles.row}>
+              <Input
+                label="Target Sets"
+                value={exerciseFormSets}
+                onChangeText={setExerciseFormSets}
+                placeholder="3"
+                keyboardType="number-pad"
+                containerStyle={styles.rowInput}
+              />
+              <Input
+                label="Target Reps"
+                value={exerciseFormReps}
+                onChangeText={setExerciseFormReps}
+                placeholder="10"
+                keyboardType="number-pad"
+                containerStyle={styles.rowInput}
+              />
+            </View>
+
+            <Input
+              label="Target Weight (lbs)"
+              value={exerciseFormWeight}
+              onChangeText={setExerciseFormWeight}
+              placeholder="135"
+              keyboardType="decimal-pad"
+              containerStyle={styles.inputContainer}
+            />
+
+            <Input
+              label="Notes (Optional)"
+              value={exerciseFormNotes}
+              onChangeText={setExerciseFormNotes}
+              placeholder="Form cues, tips, etc."
+              multiline
+              numberOfLines={3}
+              containerStyle={styles.inputContainer}
+            />
+          </ScrollView>
+
+          <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+            <Button
+              title="Cancel"
+              variant="ghost"
+              onPress={() => setShowExerciseModal(false)}
+              style={styles.footerButton}
+            />
+            <Button
+              title="Save"
+              onPress={handleSaveExercise}
+              style={styles.footerButton}
+            />
+          </View>
+        </View>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -75,69 +372,72 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl + 40,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    fontWeight: FontWeights.bold,
+  },
   scrollView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    gap: 12,
+  scrollContent: {
+    padding: Spacing.lg,
   },
-  content: {
-    padding: 20,
-    gap: 24,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  input: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 122, 255, 0.05)',
-    fontSize: 16,
+  inputContainer: {
+    marginBottom: Spacing.md,
   },
   section: {
-    gap: 12,
+    marginTop: Spacing.lg,
   },
-  emptyState: {
-    padding: 20,
-    textAlign: 'center',
-    opacity: 0.5,
+  sectionTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.md,
   },
   footer: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(128, 128, 128, 0.2)',
+    gap: Spacing.md,
   },
-  cancelButton: {
+  footerButton: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(128, 128, 128, 0.1)',
-    alignItems: 'center',
   },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+  row: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
   },
-  saveButton: {
+  rowInput: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
+    marginBottom: 0,
   },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl + 40,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: FontSizes['2xl'],
+    fontWeight: FontWeights.bold,
+  },
+  modalContent: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    gap: Spacing.md,
   },
 });
