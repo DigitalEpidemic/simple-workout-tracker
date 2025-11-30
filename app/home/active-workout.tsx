@@ -10,13 +10,14 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
  * Active Workout Screen - Main workout interface
  *
  * Features:
- * - Display workout session timer (elapsed time)
+ * - Display workout session timer (elapsed time) - STARTS when screen is entered from Start Workout Flow
+ * - Timer runs continuously until "Finish Workout" or "Cancel" is pressed
  * - Show exercise list with completion status
  * - Current exercise highlighted
  * - Show completed sets with checkmarks
  * - Add Exercise button (mid-workout)
- * - Finish Workout button
- * - Cancel Workout option
+ * - Finish Workout button (stops timer, sets endTime)
+ * - Cancel Workout option (stops timer, discards session)
  */
 export default function ActiveWorkoutScreen() {
   const router = useRouter();

@@ -69,9 +69,9 @@ export interface WorkoutSession {
   templateName?: string; // Snapshot of template name at session creation
   name: string;
   exercises: Exercise[];
-  startTime: number; // Unix timestamp
-  endTime?: number; // Unix timestamp - undefined if in progress
-  duration?: number; // Total duration in seconds (excluding rest time)
+  startTime: number; // Unix timestamp - set when "Begin Workout" is pressed on Start Workout Flow screen
+  endTime?: number; // Unix timestamp - set when "Finish Workout" is pressed - undefined if in progress
+  duration?: number; // Total duration in seconds calculated from (endTime - startTime). Rest time is NOT excluded - this is total elapsed time.
   notes?: string;
   createdAt: number;
   updatedAt: number;

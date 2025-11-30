@@ -11,7 +11,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
  *
  * Features:
  * - Display completed workout details
- * - Total duration, exercises completed, total sets, total volume
+ * - Total duration (calculated from endTime - startTime when "Finish Workout" was pressed)
+ * - Exercises completed, total sets, total volume
  * - PRs achieved (highlighted)
  * - Option to add workout notes
  * - Save or Discard workout

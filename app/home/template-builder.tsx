@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { AddExerciseButton } from '@/components/add-exercise-button';
 
 /**
  * Template Builder Screen - Create or edit workout templates
@@ -49,10 +50,7 @@ export default function TemplateBuilderScreen() {
 
           <ThemedView style={styles.section}>
             <ThemedText type="subtitle">Exercises</ThemedText>
-            <Pressable style={styles.addButton}>
-              <IconSymbol size={24} name="plus.circle.fill" color="#007AFF" />
-              <ThemedText style={styles.addButtonText}>Add Exercise</ThemedText>
-            </Pressable>
+            <AddExerciseButton />
 
             <ThemedText style={styles.emptyState}>
               No exercises added yet. Tap &ldquo;Add Exercise&rdquo; to get started!
@@ -106,18 +104,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 12,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
-    gap: 12,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   emptyState: {
     padding: 20,

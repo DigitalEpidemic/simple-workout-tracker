@@ -5,15 +5,17 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { AddExerciseButton } from '@/components/add-exercise-button';
 
 /**
  * Start Workout Flow Screen - Preview before starting workout
  *
  * Features:
  * - Preview selected template or empty workout
+ * - ADD EXERCISES to empty workout BEFORE starting
  * - Show all exercises and planned sets
  * - Allow last-minute exercise reordering
- * - Begin workout confirmation
+ * - Begin workout confirmation (starts timer)
  */
 export default function StartWorkoutScreen() {
   const router = useRouter();
@@ -47,8 +49,11 @@ export default function StartWorkoutScreen() {
 
           <ThemedView style={styles.section}>
             <ThemedText type="subtitle">Exercises</ThemedText>
+
+            <AddExerciseButton />
+
             <ThemedText style={styles.emptyState}>
-              No exercises yet. You can add exercises during the workout!
+              No exercises added yet. Add exercises before starting your workout!
             </ThemedText>
           </ThemedView>
         </ThemedView>
