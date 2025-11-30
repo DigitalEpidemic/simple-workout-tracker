@@ -1,98 +1,142 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from "expo-router";
+import React from "react";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
+/**
+ * Home Screen - Main landing screen
+ *
+ * Features:
+ * - Quick action buttons (Start Empty Workout, Choose Template)
+ * - Quick stats overview
+ * - Recent workout templates
+ * - Continue workout button (if workout in progress)
+ */
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <ThemedView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        {/* Header */}
+        <ThemedView style={styles.header}>
+          <ThemedText type="title">Workout Tracker</ThemedText>
+          <ThemedText style={styles.subtitle}>Ready to train?</ThemedText>
+        </ThemedView>
+
+        {/* Quick Stats */}
+        <ThemedView style={styles.statsContainer}>
+          <ThemedView style={styles.statCard}>
+            <ThemedText style={styles.statValue}>0</ThemedText>
+            <ThemedText style={styles.statLabel}>Total Workouts</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.statCard}>
+            <ThemedText style={styles.statValue}>0</ThemedText>
+            <ThemedText style={styles.statLabel}>This Week</ThemedText>
+          </ThemedView>
+        </ThemedView>
+
+        {/* Quick Actions */}
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle">Quick Start</ThemedText>
+
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/home/start-workout")}
+          >
+            <IconSymbol size={24} name="plus.circle.fill" color="#007AFF" />
+            <ThemedText style={styles.actionButtonText}>
+              Start Empty Workout
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/home/template-list")}
+          >
+            <IconSymbol size={24} name="list.bullet" color="#007AFF" />
+            <ThemedText style={styles.actionButtonText}>
+              Choose Template
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+
+        {/* Recent Templates */}
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle">Recent Templates</ThemedText>
+          <ThemedText style={styles.emptyState}>
+            No templates yet. Create your first workout template!
+          </ThemedText>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  scrollView: {
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  header: {
+    padding: 20,
+    paddingTop: 60,
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    padding: 20,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: 150,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: "bold",
+    lineHeight: 40,
+    textAlign: "center",
+    width: "100%",
+  },
+  statLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  section: {
+    padding: 20,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    gap: 12,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  emptyState: {
+    padding: 20,
+    textAlign: "center",
+    opacity: 0.5,
   },
 });

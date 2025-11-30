@@ -73,7 +73,7 @@ React Native workout tracking application built with TypeScript, following offli
 
 ### Phase 1 – Base Architecture
 - **1.1** ✅ Project folder structure → `project_plan/1.1-folder-structure.md`
-- **1.2** ⏳ React Navigation setup
+- **1.2** ✅ Expo Router navigation setup → `project_plan/1.2-expo-router-notes.md`
 - **1.3** ⏳ App theme
 - **1.4** ⏳ SQLite schema + migrations
 - **1.5** ⏳ Database helper utilities
@@ -154,21 +154,43 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 1.1 (Project folder structure)
+**Last Completed Phase:** 1.2 (Expo Router navigation setup)
 
-**Next Phase:** 1.2 (React Navigation setup)
+**Next Phase:** 1.3 (App theme)
 
-**Folder Structure:**
+**Architecture:**
+- **Routing:** Expo Router (file-based routing) in `app/` directory
+- **Business Logic:** Feature modules in `src/features/`
+- **Shared Code:** `src/lib/` and `src/stores/`
+- **UI Components:** Top-level `components/` folder
+
+**Navigation Structure:**
 ```
-src/
-├── features/          # Feature modules (workouts, templates, history, analytics, settings)
-├── routes/            # Navigation (index.tsx, home.tsx)
-├── lib/              # Shared code (db, utils)
-└── stores/           # Global state (Zustand)
+app/
+├── _layout.tsx              # Root stack navigator
+├── (tabs)/                  # Bottom tab navigator
+│   ├── _layout.tsx         # Tab configuration
+│   ├── index.tsx           # Home tab
+│   ├── history.tsx         # History tab
+│   ├── analytics.tsx       # Analytics tab
+│   └── settings.tsx        # Settings tab
+├── home/                    # Home stack screens
+│   ├── template-list.tsx
+│   ├── template-builder.tsx
+│   ├── start-workout.tsx
+│   ├── active-workout.tsx
+│   ├── exercise-detail.tsx
+│   └── workout-summary.tsx
+└── rest-timer.tsx          # Modal screen
 
-components/           # Shared UI components (EXISTING)
-assets/              # Static assets (EXISTING)
-types.ts             # Global TypeScript types (EXISTING)
+src/
+├── features/               # Business logic
+├── lib/                    # Utilities and database
+└── stores/                 # Global state
+
+components/                 # Shared UI components (EXISTING)
+assets/                     # Static assets (EXISTING)
+types.ts                    # Global TypeScript types (EXISTING)
 ```
 
 ---
