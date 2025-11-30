@@ -77,7 +77,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **1.2** ✅ Expo Router navigation setup → `project_plan/1.2-expo-router-notes.md`
 - **1.3** ✅ App theme
 - **1.4** ✅ SQLite schema + migrations
-- **1.5** ⏳ Database helper utilities
+- **1.5** ✅ Database helper utilities
 
 ### Phase 2 – Template System
 - **2.1** ⏳ CRUD for workout templates
@@ -156,9 +156,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 1.4 (SQLite schema + migrations)
+**Last Completed Phase:** 1.5 (Database helper utilities)
 
-**Next Phase:** 1.5 (Database helper utilities)
+**Next Phase:** 2.1 (CRUD for workout templates)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
