@@ -18,6 +18,7 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WorkoutTemplate } from '@/types';
@@ -102,6 +103,10 @@ export default function TemplateListScreen() {
     });
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
@@ -113,6 +118,9 @@ export default function TemplateListScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Text style={[styles.backButtonText, { color: colors.primary }]}>← Back</Text>
+        </Pressable>
         <Text style={[styles.title, { color: colors.text }]}>Workout Templates</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {templates.length} {templates.length === 1 ? 'template' : 'templates'}
@@ -180,6 +188,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl + 40,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
+  },
+  backButton: {
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  backButtonText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.medium,
   },
   title: {
     fontSize: FontSizes['3xl'],
