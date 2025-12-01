@@ -32,7 +32,7 @@ import {
 import { workoutStore } from "@/src/stores/workoutStore";
 import { Exercise, WorkoutSet } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -79,6 +79,13 @@ export default function ActiveWorkoutScreen() {
       setExercises(session.exercises);
     }
   }, [session]);
+
+  // Refresh data when screen comes into focus (e.g., navigating back from exercise detail)
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const handleFinishWorkout = async () => {
     if (!session) return;

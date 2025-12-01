@@ -4,7 +4,7 @@
  * Provides access to the current workout session with automatic updates.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { WorkoutSession } from '@/types';
 import { getSessionById } from '@/src/lib/db/repositories/sessions';
 
@@ -19,7 +19,7 @@ export function useWorkout(sessionId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const loadSession = async () => {
+  const loadSession = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -31,15 +31,15 @@ export function useWorkout(sessionId: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     loadSession();
-  }, [sessionId]);
+  }, [loadSession]);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     await loadSession();
-  };
+  }, [loadSession]);
 
   return {
     session,
