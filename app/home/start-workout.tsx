@@ -1,71 +1,194 @@
-import React from 'react';
-import { StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { AddExerciseButton } from '@/components/add-exercise-button';
-
 /**
- * Start Workout Flow Screen - Preview before starting workout
+ * Start Workout Flow Screen - Phase 2.2: Template Selection
  *
  * Features:
- * - Preview selected template or empty workout
- * - ADD EXERCISES to empty workout BEFORE starting
- * - Show all exercises and planned sets
- * - Allow last-minute exercise reordering
- * - Begin workout confirmation (starts timer)
+ * - Load and preview selected template
+ * - Display template exercises and target sets/reps/weight
+ * - "Start Workout" button to begin workout session (Phase 2.3)
+ * - Support for empty workout (no template)
  */
+
+import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+} from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { WorkoutTemplate } from '@/types';
+import { fetchTemplateById } from '@/src/features/templates/api/templateService';
+import { Button } from '@/components/ui/button';
+import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 export default function StartWorkoutScreen() {
   const router = useRouter();
   const { templateId } = useLocalSearchParams<{ templateId?: string }>();
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
 
-  const handleStartWorkout = () => {
-    // TODO: Create workout session and navigate to active workout
-    // For now, just show placeholder
-    alert('Workout session will be created here');
+  const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTemplate();
+  }, [templateId]);
+
+  const loadTemplate = async () => {
+    if (!templateId) {
+      // Empty workout (no template)
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await fetchTemplateById(templateId as string);
+      if (!data) {
+        Alert.alert('Error', 'Template not found');
+        router.back();
+        return;
+      }
+      setTemplate(data);
+    } catch (error) {
+      console.error('Error loading template:', error);
+      Alert.alert('Error', 'Failed to load template');
+      router.back();
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleStartWorkout = () => {
+    // TODO: Phase 2.3 - Create workout session and navigate to active workout
+    Alert.alert(
+      'Coming Soon',
+      'Workout session creation will be implemented in Phase 2.3'
+    );
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const workoutName = template?.name || 'Empty Workout';
+  const exerciseCount = template?.exercises.length || 0;
+  const exercises = template?.exercises || [];
+
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <Pressable onPress={() => router.back()}>
-            <IconSymbol size={28} name="chevron.left" color="#007AFF" />
-          </Pressable>
-          <ThemedText type="title">Start Workout</ThemedText>
-        </ThemedView>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Text style={[styles.backButtonText, { color: colors.primary }]}>← Back</Text>
+        </Pressable>
+        <Text style={[styles.title, { color: colors.text }]}>Start Workout</Text>
+      </View>
 
-        <ThemedView style={styles.content}>
-          <ThemedView style={styles.infoCard}>
-            <ThemedText style={styles.workoutName}>
-              {templateId ? 'Template Workout' : 'Empty Workout'}
-            </ThemedText>
-            <ThemedText style={styles.workoutInfo}>
-              0 exercises · Ready to begin
-            </ThemedText>
-          </ThemedView>
+      {/* Content */}
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Workout Info Card */}
+        <View
+          style={[
+            styles.infoCard,
+            { backgroundColor: colors.primaryLight, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.workoutName, { color: colors.text }]}>{workoutName}</Text>
+          {template?.description && (
+            <Text style={[styles.workoutDescription, { color: colors.textSecondary }]}>
+              {template.description}
+            </Text>
+          )}
+          <Text style={[styles.workoutInfo, { color: colors.textSecondary }]}>
+            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
+            {exerciseCount > 0 && ' · Ready to begin'}
+          </Text>
+        </View>
 
-          <ThemedView style={styles.section}>
-            <ThemedText type="subtitle">Exercises</ThemedText>
-
-            <AddExerciseButton />
-
-            <ThemedText style={styles.emptyState}>
-              No exercises added yet. Add exercises before starting your workout!
-            </ThemedText>
-          </ThemedView>
-        </ThemedView>
+        {/* Exercise List */}
+        {exerciseCount > 0 ? (
+          <View style={styles.exerciseSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Exercises</Text>
+            {exercises.map((exercise, index) => (
+              <View
+                key={exercise.id}
+                style={[
+                  styles.exerciseCard,
+                  { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+                ]}
+              >
+                <View style={styles.exerciseHeader}>
+                  <View style={[styles.exerciseNumber, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.exerciseNumberText}>{index + 1}</Text>
+                  </View>
+                  <View style={styles.exerciseInfo}>
+                    <Text style={[styles.exerciseName, { color: colors.text }]}>
+                      {exercise.name}
+                    </Text>
+                    <View style={styles.exerciseTargets}>
+                      {exercise.targetSets && (
+                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          {exercise.targetSets} sets
+                        </Text>
+                      )}
+                      {exercise.targetReps && (
+                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          × {exercise.targetReps} reps
+                        </Text>
+                      )}
+                      {exercise.targetWeight && (
+                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          @ {exercise.targetWeight} lbs
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+                {exercise.notes && (
+                  <Text style={[styles.exerciseNotes, { color: colors.textSecondary }]}>
+                    Note: {exercise.notes}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Exercises</Text>
+            <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
+              This workout has no exercises. Add exercises in Phase 2.3.
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
-      <ThemedView style={styles.footer}>
-        <Pressable style={styles.startButton} onPress={handleStartWorkout}>
-          <IconSymbol size={24} name="play.fill" color="#FFFFFF" />
-          <ThemedText style={styles.startButtonText}>Begin Workout</ThemedText>
-        </Pressable>
-      </ThemedView>
-    </ThemedView>
+      {/* Footer with Start Button */}
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Button
+          title="Begin Workout"
+          onPress={handleStartWorkout}
+          fullWidth
+          disabled={exerciseCount === 0}
+        />
+        {exerciseCount === 0 && (
+          <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
+            Add exercises before starting
+          </Text>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -73,59 +196,125 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    paddingTop: Spacing.xl + 40,
+    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  backButtonText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.medium,
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    fontWeight: FontWeights.bold,
+  },
   scrollView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    gap: 12,
-  },
-  content: {
-    padding: 20,
-    gap: 24,
+  scrollContent: {
+    padding: Spacing.lg,
   },
   infoCard: {
-    padding: 20,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
   },
   workoutName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: FontSizes['2xl'],
+    fontWeight: FontWeights.bold,
+    marginBottom: Spacing.xs,
+  },
+  workoutDescription: {
+    fontSize: FontSizes.base,
+    marginBottom: Spacing.sm,
   },
   workoutInfo: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginTop: 4,
+    fontSize: FontSizes.sm,
   },
-  section: {
-    gap: 12,
+  exerciseSection: {
+    gap: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.xs,
+  },
+  exerciseCard: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  exerciseHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+  },
+  exerciseNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  exerciseNumberText: {
+    color: '#FFFFFF',
+    fontSize: FontSizes.sm,
+    fontWeight: FontWeights.bold,
+  },
+  exerciseInfo: {
+    flex: 1,
+  },
+  exerciseName: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.xs,
+  },
+  exerciseTargets: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  targetText: {
+    fontSize: FontSizes.sm,
+  },
+  exerciseNotes: {
+    fontSize: FontSizes.sm,
+    marginTop: Spacing.sm,
+    fontStyle: 'italic',
   },
   emptyState: {
-    padding: 20,
+    alignItems: 'center',
+    paddingVertical: Spacing['3xl'],
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyTitle: {
+    fontSize: FontSizes['2xl'],
+    fontWeight: FontWeights.semibold,
+    marginBottom: Spacing.sm,
     textAlign: 'center',
-    opacity: 0.5,
+  },
+  emptyDescription: {
+    fontSize: FontSizes.base,
+    textAlign: 'center',
   },
   footer: {
-    padding: 20,
+    padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(128, 128, 128, 0.2)',
+    gap: Spacing.sm,
   },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 18,
-    borderRadius: 12,
-    backgroundColor: '#007AFF',
-    gap: 12,
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+  footerNote: {
+    fontSize: FontSizes.sm,
+    textAlign: 'center',
   },
 });

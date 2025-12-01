@@ -81,7 +81,7 @@ React Native workout tracking application built with TypeScript, following offli
 
 ### Phase 2 – Template System
 - **2.1** ✅ CRUD for workout templates
-- **2.2** ⏳ Template selection screen
+- **2.2** ✅ Template selection screen
 - **2.3** ⏳ Starting a workout from a template
 
 ### Phase 3 – Active Workout System
@@ -158,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 2.1 (CRUD for workout templates)
+**Last Completed Phase:** 2.2 (Template selection screen)
 
-**Next Phase:** 2.2 (Template selection screen)
+**Next Phase:** 2.3 (Starting a workout from a template)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
