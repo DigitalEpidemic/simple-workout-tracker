@@ -40,6 +40,8 @@ export function Input({
   containerStyle,
   inputStyle,
   editable = true,
+  onFocus,
+  onBlur,
   ...props
 }: InputProps) {
   const colorScheme = useColorScheme() ?? 'light';
@@ -57,6 +59,16 @@ export function Input({
   const getBackgroundColor = () => {
     if (!editable) return colors.backgroundTertiary;
     return colors.background;
+  };
+
+  const handleFocus = (e: any) => {
+    setIsFocused(true);
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: any) => {
+    setIsFocused(false);
+    onBlur?.(e);
   };
 
   return (
@@ -103,8 +115,8 @@ export function Input({
             inputStyle,
           ]}
           placeholderTextColor={colors.textTertiary}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           editable={editable}
           {...props}
         />

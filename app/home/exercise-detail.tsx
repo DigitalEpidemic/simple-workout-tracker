@@ -66,19 +66,57 @@ function SetRow({
   const [reps, setReps] = useState(set.reps.toString());
   const [weight, setWeight] = useState(set.weight.toString());
 
+  // Update local state when set prop changes, but only if the input is not being edited
+  const [isEditingReps, setIsEditingReps] = useState(false);
+  const [isEditingWeight, setIsEditingWeight] = useState(false);
+
+  React.useEffect(() => {
+    if (!isEditingReps) {
+      setReps(set.reps.toString());
+    }
+  }, [set.reps, isEditingReps]);
+
+  React.useEffect(() => {
+    if (!isEditingWeight) {
+      setWeight(set.weight.toString());
+    }
+  }, [set.weight, isEditingWeight]);
+
   const handleRepsChange = (value: string) => {
     setReps(value);
-    const numValue = parseInt(value, 10);
+  };
+
+  const handleRepsFocus = () => {
+    setIsEditingReps(true);
+  };
+
+  const handleRepsBlur = () => {
+    setIsEditingReps(false);
+    const numValue = parseInt(reps, 10);
     if (!isNaN(numValue) && numValue > 0) {
       onUpdate(set.id, { reps: numValue });
+    } else {
+      // Reset to previous value if invalid
+      setReps(set.reps.toString());
     }
   };
 
   const handleWeightChange = (value: string) => {
     setWeight(value);
-    const numValue = parseFloat(value);
+  };
+
+  const handleWeightFocus = () => {
+    setIsEditingWeight(true);
+  };
+
+  const handleWeightBlur = () => {
+    setIsEditingWeight(false);
+    const numValue = parseFloat(weight);
     if (!isNaN(numValue) && numValue >= 0) {
       onUpdate(set.id, { weight: numValue });
+    } else {
+      // Reset to previous value if invalid
+      setWeight(set.weight.toString());
     }
   };
 
@@ -160,6 +198,8 @@ function SetRow({
           <Input
             value={weight}
             onChangeText={handleWeightChange}
+            onFocus={handleWeightFocus}
+            onBlur={handleWeightBlur}
             keyboardType="decimal-pad"
             placeholder="0"
             size="sm"
@@ -176,6 +216,8 @@ function SetRow({
           <Input
             value={reps}
             onChangeText={handleRepsChange}
+            onFocus={handleRepsFocus}
+            onBlur={handleRepsBlur}
             keyboardType="number-pad"
             placeholder="0"
             size="sm"

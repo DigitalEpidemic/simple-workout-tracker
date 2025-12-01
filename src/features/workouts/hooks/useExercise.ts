@@ -73,10 +73,20 @@ export function useExercise(exerciseId: string) {
         createdAt: Date.now(),
       };
 
+      // Optimistically update local state
+      setExercise((prevExercise) => {
+        if (!prevExercise) return prevExercise;
+
+        return {
+          ...prevExercise,
+          sets: [...prevExercise.sets, newSet],
+        };
+      });
+
+      // Create in database in background
       await createSet(newSet);
-      await refresh();
     },
-    [exercise, refresh]
+    [exercise]
   );
 
   /**
@@ -87,10 +97,24 @@ export function useExercise(exerciseId: string) {
       setId: string,
       updates: { reps?: number; weight?: number; completed?: boolean }
     ) => {
+      if (!exercise) return;
+
+      // Optimistically update local state
+      setExercise((prevExercise) => {
+        if (!prevExercise) return prevExercise;
+
+        return {
+          ...prevExercise,
+          sets: prevExercise.sets.map((set) =>
+            set.id === setId ? { ...set, ...updates } : set
+          ),
+        };
+      });
+
+      // Update database in background
       await updateSet(setId, updates);
-      await refresh();
     },
-    [refresh]
+    [exercise]
   );
 
   /**
@@ -98,10 +122,22 @@ export function useExercise(exerciseId: string) {
    */
   const removeSet = useCallback(
     async (setId: string) => {
+      if (!exercise) return;
+
+      // Optimistically update local state
+      setExercise((prevExercise) => {
+        if (!prevExercise) return prevExercise;
+
+        return {
+          ...prevExercise,
+          sets: prevExercise.sets.filter((set) => set.id !== setId),
+        };
+      });
+
+      // Delete from database in background
       await deleteSet(setId);
-      await refresh();
     },
-    [refresh]
+    [exercise]
   );
 
   /**
@@ -109,11 +145,26 @@ export function useExercise(exerciseId: string) {
    */
   const toggleSetCompletion = useCallback(
     async (setId: string, completed: boolean) => {
+      if (!exercise) return;
+
       const completedAt = completed ? Date.now() : undefined;
+
+      // Optimistically update local state
+      setExercise((prevExercise) => {
+        if (!prevExercise) return prevExercise;
+
+        return {
+          ...prevExercise,
+          sets: prevExercise.sets.map((set) =>
+            set.id === setId ? { ...set, completed, completedAt } : set
+          ),
+        };
+      });
+
+      // Update database in background
       await updateSet(setId, { completed, completedAt });
-      await refresh();
     },
-    [refresh]
+    [exercise]
   );
 
   return {
