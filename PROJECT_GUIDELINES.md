@@ -86,7 +86,7 @@ React Native workout tracking application built with TypeScript, following offli
 
 ### Phase 3 – Active Workout System
 - **3.1** ✅ Workout session screen + timer
-- **3.2** ⏳ Exercise screen (reps/sets/weight)
+- **3.2** ✅ Exercise screen (reps/sets/weight)
 - **3.3** ⏳ Rest timer
 - **3.4** ⏳ Workout completion flow
 
@@ -158,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 3.1 (Workout session screen + timer)
+**Last Completed Phase:** 3.2 (Exercise screen - reps/sets/weight)
 
-**Next Phase:** 3.2 (Exercise screen - reps/sets/weight)
+**Next Phase:** 3.3 (Rest timer)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
