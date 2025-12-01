@@ -146,8 +146,8 @@ export default function RestTimerModal() {
   };
 
   const handleAddTime = async (seconds: number) => {
-    setTimeRemaining((prev) => prev + seconds);
-    timerEndTimeRef.current = Date.now() + (timeRemaining + seconds) * 1000;
+    setTimeRemaining((prev) => Math.max(0, prev + seconds));
+    timerEndTimeRef.current = Date.now() + Math.max(0, timeRemaining + seconds) * 1000;
 
     // Light haptic feedback for button press
     try {
@@ -265,6 +265,18 @@ export default function RestTimerModal() {
         {/* Quick Actions */}
         {!hasCompleted && (
           <View style={styles.quickActions}>
+            <Pressable
+              style={[
+                styles.quickButton,
+                { backgroundColor: colors.errorLight },
+                Shadows.sm,
+              ]}
+              onPress={() => handleAddTime(-30)}
+            >
+              <Text style={[styles.quickButtonText, { color: colors.error }]}>
+                -30s
+              </Text>
+            </Pressable>
             <Pressable
               style={[
                 styles.quickButton,

@@ -50,6 +50,7 @@ function SetRow({
   onRemove,
   onToggleComplete,
   colors,
+  hasMoreSets,
 }: {
   set: WorkoutSet;
   setNumber: number;
@@ -59,8 +60,9 @@ function SetRow({
     updates: { reps?: number; weight?: number }
   ) => void;
   onRemove: (setId: string) => void;
-  onToggleComplete: (setId: string, completed: boolean) => void;
+  onToggleComplete: (setId: string, completed: boolean, hasMoreSets: boolean) => void;
   colors: any;
+  hasMoreSets: boolean;
 }) {
   const swipeableRef = useRef<Swipeable>(null);
   const [reps, setReps] = useState(set.reps.toString());
@@ -121,7 +123,7 @@ function SetRow({
   };
 
   const handleToggleComplete = () => {
-    onToggleComplete(set.id, !set.completed);
+    onToggleComplete(set.id, !set.completed, hasMoreSets);
   };
 
   const handleDelete = () => {
@@ -272,6 +274,25 @@ export default function ExerciseDetailScreen() {
     removeSet,
     toggleSetCompletion,
   } = useExercise(exerciseId as string);
+
+  // Handle set completion with auto-start rest timer
+  const handleToggleSetCompletion = async (
+    setId: string,
+    completed: boolean,
+    hasMoreSets: boolean
+  ) => {
+    await toggleSetCompletion(setId, completed);
+
+    // Auto-start rest timer if:
+    // 1. Set is being marked as complete (not uncomplete)
+    // 2. There are more incomplete sets remaining
+    if (completed && hasMoreSets) {
+      // Default rest duration (90 seconds)
+      // TODO: Phase 4.6 - Make this configurable in user settings
+      const defaultRestDuration = 90;
+      router.push(`/rest-timer?duration=${defaultRestDuration}`);
+    }
+  };
 
   const handleAddSet = async () => {
     if (!exercise) return;
@@ -454,18 +475,25 @@ export default function ExerciseDetailScreen() {
                 </Text>
               </View>
             ) : (
-              exercise.sets.map((set, index) => (
-                <SetRow
-                  key={set.id}
-                  set={set}
-                  setNumber={index + 1}
-                  previousSet={previousSets[index]}
-                  onUpdate={updateSetData}
-                  onRemove={handleRemoveSet}
-                  onToggleComplete={toggleSetCompletion}
-                  colors={colors}
-                />
-              ))
+              exercise.sets.map((set, index) => {
+                // Check if there are more incomplete sets after this one
+                const remainingSets = exercise.sets.slice(index + 1);
+                const hasMoreIncompleteSets = remainingSets.some(s => !s.completed);
+
+                return (
+                  <SetRow
+                    key={set.id}
+                    set={set}
+                    setNumber={index + 1}
+                    previousSet={previousSets[index]}
+                    onUpdate={updateSetData}
+                    onRemove={handleRemoveSet}
+                    onToggleComplete={handleToggleSetCompletion}
+                    colors={colors}
+                    hasMoreSets={hasMoreIncompleteSets}
+                  />
+                );
+              })
             )}
           </View>
 
