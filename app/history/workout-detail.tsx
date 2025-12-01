@@ -169,15 +169,12 @@ export default function WorkoutDetailScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={[styles.backIcon, { color: colors.primary }]}>‹</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Workout Details
-          </Text>
+        <View style={styles.headerContent}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text }]}>Workout Details</Text>
         </View>
-        <View style={styles.headerRight} />
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -368,31 +365,30 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
     paddingTop: 60,
     paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
   },
-  backButton: {
-    marginRight: Spacing.md,
-  },
-  backIcon: {
-    fontSize: 48,
-    lineHeight: 48,
-    fontWeight: '300',
-  },
-  headerCenter: {
-    flex: 1,
+  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
-  headerTitle: {
-    fontSize: FontSizes.lg,
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
+  backButtonText: {
+    fontSize: FontSizes['2xl'],
+    fontWeight: FontWeights.medium,
+  },
+  title: {
+    fontSize: FontSizes.xl,
     fontWeight: FontWeights.semibold,
-  },
-  headerRight: {
-    width: 40,
   },
   scrollView: {
     flex: 1,

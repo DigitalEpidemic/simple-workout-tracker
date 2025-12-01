@@ -8,13 +8,14 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, View, RefreshControl } from 'react-native';
+import { StyleSheet, FlatList, ActivityIndicator, View, RefreshControl, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WorkoutCard } from '@/src/features/history/components/workout-card';
 import { getWorkoutHistory, WorkoutSummary } from '@/src/features/history/api/historyService';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function HistoryScreen() {
@@ -86,16 +87,36 @@ export default function HistoryScreen() {
     );
   };
 
+  /**
+   * Navigate to calendar view
+   */
+  const handleCalendarPress = () => {
+    router.push('/history/calendar');
+  };
+
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
       <ThemedView style={styles.header}>
-        <ThemedText type="title">History</ThemedText>
-        <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
-          {workouts.length === 0
-            ? 'No workouts completed'
-            : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'} completed`}
-        </ThemedText>
+        <View style={styles.headerTop}>
+          <View style={styles.headerTextContainer}>
+            <ThemedText type="title">History</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {workouts.length === 0
+                ? 'No workouts completed'
+                : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'} completed`}
+            </ThemedText>
+          </View>
+          <Pressable
+            onPress={handleCalendarPress}
+            style={({ pressed }) => [
+              styles.calendarButton,
+              { backgroundColor: pressed ? colors.backgroundTertiary : colors.backgroundSecondary },
+            ]}
+          >
+            <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+          </Pressable>
+        </View>
       </ThemedView>
 
       {/* Loading indicator */}
@@ -136,6 +157,22 @@ const styles = StyleSheet.create({
   header: {
     padding: Spacing.lg,
     paddingTop: 60,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  calendarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   subtitle: {
     fontSize: 16,
