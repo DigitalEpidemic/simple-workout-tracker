@@ -10,26 +10,38 @@
  * - Show previous best sets (PR indicator)
  */
 
-import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
+  BorderRadius,
+  Colors,
+  FontSizes,
+  FontWeights,
+  Spacing,
+} from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useExercise } from "@/src/features/workouts/hooks/useExercise";
+import { WorkoutSet } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { WorkoutSet } from '@/types';
-import { useExercise } from '@/src/features/workouts/hooks/useExercise';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+  Animated,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import {
+  GestureHandlerRootView,
+  Swipeable,
+} from "react-native-gesture-handler";
 
 /**
- * Set input row component
+ * Set input row component with swipe-to-delete
  */
 function SetRow({
   set,
@@ -43,11 +55,15 @@ function SetRow({
   set: WorkoutSet;
   setNumber: number;
   previousSet?: WorkoutSet;
-  onUpdate: (setId: string, updates: { reps?: number; weight?: number }) => void;
+  onUpdate: (
+    setId: string,
+    updates: { reps?: number; weight?: number }
+  ) => void;
   onRemove: (setId: string) => void;
   onToggleComplete: (setId: string, completed: boolean) => void;
   colors: any;
 }) {
+  const swipeableRef = useRef<Swipeable>(null);
   const [reps, setReps] = useState(set.reps.toString());
   const [weight, setWeight] = useState(set.weight.toString());
 
@@ -71,85 +87,139 @@ function SetRow({
     onToggleComplete(set.id, !set.completed);
   };
 
-  return (
-    <View
-      style={[
-        styles.setRow,
-        {
-          backgroundColor: set.completed
-            ? colors.successLight
-            : colors.backgroundSecondary,
-          borderColor: set.completed ? colors.success : colors.border,
-        },
-      ]}
-    >
-      {/* Set number */}
-      <View style={styles.setNumberContainer}>
-        <Text style={[styles.setNumber, { color: colors.textSecondary }]}>
-          {setNumber}
-        </Text>
-      </View>
+  const handleDelete = () => {
+    swipeableRef.current?.close();
+    Alert.alert("Remove Set", "Are you sure you want to remove this set?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => onRemove(set.id),
+      },
+    ]);
+  };
 
-      {/* Previous set indicator */}
-      {previousSet && (
-        <View style={styles.previousSetContainer}>
-          <Text style={[styles.previousSetText, { color: colors.textTertiary }]}>
-            {previousSet.weight} × {previousSet.reps}
-          </Text>
-        </View>
-      )}
+  // Render the delete action when swiped left
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [0, 100],
+      extrapolate: "clamp",
+    });
 
-      {/* Weight input */}
-      <View style={styles.inputWrapper}>
-        <Input
-          value={weight}
-          onChangeText={handleWeightChange}
-          keyboardType="decimal-pad"
-          placeholder="0"
-          size="sm"
-          containerStyle={styles.inputContainer}
-        />
-        <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>lbs</Text>
-      </View>
-
-      {/* Reps input */}
-      <View style={styles.inputWrapper}>
-        <Input
-          value={reps}
-          onChangeText={handleRepsChange}
-          keyboardType="number-pad"
-          placeholder="0"
-          size="sm"
-          containerStyle={styles.inputContainer}
-        />
-        <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>reps</Text>
-      </View>
-
-      {/* Completion checkbox */}
-      <Pressable
-        onPress={handleToggleComplete}
+    return (
+      <Animated.View
         style={[
-          styles.checkbox,
+          styles.deleteAction,
           {
-            backgroundColor: set.completed ? colors.success : colors.background,
+            transform: [{ translateX: trans }],
+            backgroundColor: colors.error,
+          },
+        ]}
+      >
+        <Pressable onPress={handleDelete} style={styles.deleteButton}>
+          <Ionicons
+            name="trash-outline"
+            size={28}
+            color={styles.deleteText.color}
+          />
+          <Text style={styles.deleteText}>Remove</Text>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      onSwipeableWillOpen={() => handleDelete()}
+      overshootRight={true}
+      rightThreshold={75}
+    >
+      <View
+        style={[
+          styles.setRow,
+          {
+            backgroundColor: set.completed
+              ? colors.successLight
+              : colors.backgroundSecondary,
             borderColor: set.completed ? colors.success : colors.border,
           },
         ]}
       >
-        {set.completed && (
-          <Text style={[styles.checkmark, { color: colors.background }]}>✓</Text>
-        )}
-      </Pressable>
+        {/* Set number */}
+        <View style={styles.setNumberContainer}>
+          <Text style={[styles.setNumber, { color: colors.textSecondary }]}>
+            {setNumber}
+          </Text>
+        </View>
 
-      {/* Remove button */}
-      <Pressable
-        onPress={() => onRemove(set.id)}
-        style={styles.removeButton}
-        hitSlop={8}
-      >
-        <Text style={[styles.removeIcon, { color: colors.error }]}>✕</Text>
-      </Pressable>
-    </View>
+        {/* Previous set indicator */}
+        <View style={styles.previousSetContainer}>
+          <Text
+            style={[styles.previousSetText, { color: colors.textTertiary }]}
+          >
+            {previousSet ? `${previousSet.weight} × ${previousSet.reps}` : "—"}
+          </Text>
+        </View>
+
+        {/* Weight input */}
+        <View style={styles.inputWrapper}>
+          <Input
+            value={weight}
+            onChangeText={handleWeightChange}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            size="sm"
+            containerStyle={styles.inputContainer}
+            inputStyle={styles.centeredInput}
+          />
+          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+            lbs
+          </Text>
+        </View>
+
+        {/* Reps input */}
+        <View style={styles.inputWrapper}>
+          <Input
+            value={reps}
+            onChangeText={handleRepsChange}
+            keyboardType="number-pad"
+            placeholder="0"
+            size="sm"
+            containerStyle={styles.inputContainer}
+            inputStyle={styles.centeredInput}
+          />
+          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+            reps
+          </Text>
+        </View>
+
+        {/* Completion checkbox */}
+        <Pressable
+          onPress={handleToggleComplete}
+          style={[
+            styles.checkbox,
+            {
+              backgroundColor: set.completed
+                ? colors.success
+                : colors.background,
+              borderColor: set.completed ? colors.success : colors.border,
+            },
+          ]}
+        >
+          {set.completed && (
+            <Text style={[styles.checkmark, { color: colors.background }]}>
+              ✓
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    </Swipeable>
   );
 }
 
@@ -159,7 +229,7 @@ export default function ExerciseDetailScreen() {
     workoutSessionId: string;
     exerciseId: string;
   }>();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
   const {
@@ -196,29 +266,20 @@ export default function ExerciseDetailScreen() {
   };
 
   const handleRemoveSet = async (setId: string) => {
-    Alert.alert('Remove Set', 'Are you sure you want to remove this set?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await removeSet(setId);
-        },
-      },
-    ]);
+    await removeSet(setId);
   };
 
   const handleAutofill = async () => {
     if (!exercise || previousSets.length === 0) return;
 
     Alert.alert(
-      'Autofill Sets',
+      "Autofill Sets",
       `Autofill ${previousSets.length} sets from your last workout?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Autofill',
-          style: 'default',
+          text: "Autofill",
+          style: "default",
           onPress: async () => {
             // Add sets based on previous workout
             for (const prevSet of previousSets) {
@@ -232,7 +293,9 @@ export default function ExerciseDetailScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.centerContainer, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -240,22 +303,31 @@ export default function ExerciseDetailScreen() {
 
   if (error || !exercise) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.centerContainer, { backgroundColor: colors.background }]}
+      >
         <Text style={[styles.errorText, { color: colors.error }]}>
-          {error?.message || 'Exercise not found'}
+          {error?.message || "Exercise not found"}
         </Text>
-        <Button title="Go Back" onPress={() => router.back()} style={styles.errorButton} />
+        <Button
+          title="Go Back"
+          onPress={() => router.back()}
+          style={styles.errorButton}
+        />
       </View>
     );
   }
 
   // Find best set from previous workout
-  const bestPreviousSet = previousSets.reduce<WorkoutSet | null>((best, set) => {
-    if (!best) return set;
-    const setBest = set.weight * set.reps;
-    const currentBest = best.weight * best.reps;
-    return setBest > currentBest ? set : best;
-  }, null);
+  const bestPreviousSet = previousSets.reduce<WorkoutSet | null>(
+    (best, set) => {
+      if (!best) return set;
+      const setBest = set.weight * set.reps;
+      const currentBest = best.weight * best.reps;
+      return setBest > currentBest ? set : best;
+    },
+    null
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -269,8 +341,11 @@ export default function ExerciseDetailScreen() {
             {exercise.name}
           </Text>
           {bestPreviousSet && (
-            <Text style={[styles.previousBest, { color: colors.textSecondary }]}>
-              Previous best: {bestPreviousSet.weight} lbs × {bestPreviousSet.reps}
+            <Text
+              style={[styles.previousBest, { color: colors.textSecondary }]}
+            >
+              Previous best: {bestPreviousSet.weight} lbs ×{" "}
+              {bestPreviousSet.reps}
             </Text>
           )}
         </View>
@@ -278,75 +353,126 @@ export default function ExerciseDetailScreen() {
       </View>
 
       {/* Sets list */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Autofill button */}
-        {previousSets.length > 0 && exercise.sets.length === 0 && (
-          <View style={styles.autofillContainer}>
-            <Button
-              title={`Autofill ${previousSets.length} sets from last workout`}
-              onPress={handleAutofill}
-              variant="outline"
-            />
-          </View>
-        )}
+      <GestureHandlerRootView style={styles.scrollView}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Autofill button */}
+          {previousSets.length > 0 && exercise.sets.length === 0 && (
+            <View style={styles.autofillContainer}>
+              <Button
+                title={`Autofill ${previousSets.length} sets from last workout`}
+                onPress={handleAutofill}
+                variant="outline"
+              />
+            </View>
+          )}
 
-        {/* Sets header */}
-        {exercise.sets.length > 0 && (
-          <View style={styles.setsHeader}>
-            <Text style={[styles.setsHeaderText, { color: colors.textSecondary }]}>SET</Text>
-            <Text style={[styles.setsHeaderText, { color: colors.textSecondary }]}>
-              PREVIOUS
+          {/* Sets header */}
+          {exercise.sets.length > 0 && (
+            <View style={styles.setsHeader}>
+              <View style={styles.setNumberContainer}>
+                <Text
+                  style={[
+                    styles.setsHeaderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  SET
+                </Text>
+              </View>
+              <View style={styles.previousSetContainer}>
+                <Text
+                  style={[
+                    styles.setsHeaderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  PREVIOUS
+                </Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <Text
+                  style={[
+                    styles.setsHeaderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  WEIGHT
+                </Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <Text
+                  style={[
+                    styles.setsHeaderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  REPS
+                </Text>
+              </View>
+              <View style={styles.setsHeaderSpacer} />
+            </View>
+          )}
+
+          {/* Sets */}
+          <View style={styles.setsList}>
+            {exercise.sets.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text
+                  style={[styles.emptyText, { color: colors.textSecondary }]}
+                >
+                  No sets yet. Add your first set!
+                </Text>
+              </View>
+            ) : (
+              exercise.sets.map((set, index) => (
+                <SetRow
+                  key={set.id}
+                  set={set}
+                  setNumber={index + 1}
+                  previousSet={previousSets[index]}
+                  onUpdate={updateSetData}
+                  onRemove={handleRemoveSet}
+                  onToggleComplete={toggleSetCompletion}
+                  colors={colors}
+                />
+              ))
+            )}
+          </View>
+
+          {/* Add set button */}
+          <Pressable
+            onPress={handleAddSet}
+            style={[
+              styles.addSetButton,
+              {
+                backgroundColor: colors.primaryLight,
+                borderColor: colors.primary,
+              },
+            ]}
+          >
+            <Text style={[styles.addSetIcon, { color: colors.primary }]}>
+              +
             </Text>
-            <Text style={[styles.setsHeaderText, { color: colors.textSecondary }]}>WEIGHT</Text>
-            <Text style={[styles.setsHeaderText, { color: colors.textSecondary }]}>REPS</Text>
-            <View style={styles.setsHeaderSpacer} />
-          </View>
-        )}
+            <Text style={[styles.addSetText, { color: colors.primary }]}>
+              Add Set
+            </Text>
+          </Pressable>
 
-        {/* Sets */}
-        <View style={styles.setsList}>
-          {exercise.sets.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No sets yet. Add your first set!
+          {/* Notes section */}
+          {exercise.notes && (
+            <View style={styles.notesContainer}>
+              <Text
+                style={[styles.notesLabel, { color: colors.textSecondary }]}
+              >
+                Notes:
+              </Text>
+              <Text style={[styles.notesText, { color: colors.text }]}>
+                {exercise.notes}
               </Text>
             </View>
-          ) : (
-            exercise.sets.map((set, index) => (
-              <SetRow
-                key={set.id}
-                set={set}
-                setNumber={index + 1}
-                previousSet={previousSets[index]}
-                onUpdate={updateSetData}
-                onRemove={handleRemoveSet}
-                onToggleComplete={toggleSetCompletion}
-                colors={colors}
-              />
-            ))
           )}
-        </View>
-
-        {/* Add set button */}
-        <Pressable
-          onPress={handleAddSet}
-          style={[
-            styles.addSetButton,
-            { backgroundColor: colors.primaryLight, borderColor: colors.primary },
-          ]}
-        >
-          <Text style={[styles.addSetIcon, { color: colors.primary }]}>+</Text>
-          <Text style={[styles.addSetText, { color: colors.primary }]}>Add Set</Text>
-        </Pressable>
-
-        {/* Notes section */}
-        {exercise.notes && (
-          <View style={styles.notesContainer}>
-            <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes:</Text>
-            <Text style={[styles.notesText, { color: colors.text }]}>{exercise.notes}</Text>
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      </GestureHandlerRootView>
 
       {/* Footer */}
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
@@ -366,14 +492,14 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: Spacing.lg,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: Spacing.xl + 40,
     paddingBottom: Spacing.md,
     paddingHorizontal: Spacing.lg,
@@ -382,8 +508,8 @@ const styles = StyleSheet.create({
   backButton: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   backIcon: {
     fontSize: 36,
@@ -391,7 +517,7 @@ const styles = StyleSheet.create({
   },
   headerCenter: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     gap: Spacing.xs,
   },
   headerRight: {
@@ -415,15 +541,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   setsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xs,
     gap: Spacing.sm,
   },
   setsHeaderText: {
     fontSize: FontSizes.xs,
     fontWeight: FontWeights.semibold,
+    textAlign: "center",
   },
   setsHeaderSpacer: {
     width: 60,
@@ -432,8 +559,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
@@ -443,8 +570,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   setNumber: {
     fontSize: FontSizes.base,
@@ -452,17 +579,22 @@ const styles = StyleSheet.create({
   },
   previousSetContainer: {
     width: 70,
+    alignItems: "center",
   },
   previousSetText: {
     fontSize: FontSizes.xs,
+    textAlign: "center",
   },
   inputWrapper: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     gap: Spacing.xs,
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
+  },
+  centeredInput: {
+    textAlign: "center",
   },
   inputLabel: {
     fontSize: FontSizes.xs,
@@ -473,36 +605,44 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkmark: {
     fontSize: FontSizes.base,
     fontWeight: FontWeights.bold,
   },
-  removeButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+  deleteAction: {
+    justifyContent: "center",
+    alignItems: "flex-end",
+    paddingRight: Spacing.md,
+    marginVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
   },
-  removeIcon: {
-    fontSize: FontSizes.lg,
+  deleteButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 80,
+    height: "100%",
+  },
+  deleteText: {
+    color: "#FFFFFF",
+    fontSize: FontSizes.sm,
     fontWeight: FontWeights.semibold,
   },
   addSetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 2,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     marginTop: Spacing.sm,
     gap: Spacing.sm,
   },
   addSetIcon: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.semibold,
   },
   addSetText: {
@@ -524,7 +664,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     paddingVertical: Spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: FontSizes.base,
@@ -534,13 +674,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   doneButton: {
-    width: '100%',
+    width: "100%",
   },
   errorText: {
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.medium,
     marginBottom: Spacing.lg,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorButton: {
     marginTop: Spacing.md,
