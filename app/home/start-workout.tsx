@@ -90,10 +90,12 @@ export default function StartWorkoutScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
-          <Text style={[styles.backButtonText, { color: colors.primary }]}>← Back</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>Start Workout</Text>
+        <View style={styles.headerContent}>
+          <Pressable onPress={handleBack} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text }]}>Start Workout</Text>
+        </View>
       </View>
 
       {/* Content */}
@@ -207,17 +209,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
   backButton: {
+    position: 'absolute',
+    left: 0,
     paddingVertical: Spacing.xs,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes.base,
+    fontSize: FontSizes['2xl'],
     fontWeight: FontWeights.medium,
   },
   title: {
-    fontSize: FontSizes['3xl'],
-    fontWeight: FontWeights.bold,
+    fontSize: FontSizes.xl,
+    fontWeight: FontWeights.semibold,
   },
   scrollView: {
     flex: 1,

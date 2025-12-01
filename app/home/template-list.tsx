@@ -118,13 +118,17 @@ export default function TemplateListScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
-          <Text style={[styles.backButtonText, { color: colors.primary }]}>← Back</Text>
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>Workout Templates</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          {templates.length} {templates.length === 1 ? 'template' : 'templates'}
-        </Text>
+        <View style={styles.headerContent}>
+          <Pressable onPress={handleBack} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+          </Pressable>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: colors.text }]}>Workout Templates</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {templates.length} {templates.length === 1 ? 'template' : 'templates'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       <ScrollView
@@ -189,21 +193,32 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
   backButton: {
+    position: 'absolute',
+    left: 0,
     paddingVertical: Spacing.xs,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes.base,
+    fontSize: FontSizes['2xl'],
     fontWeight: FontWeights.medium,
   },
+  titleContainer: {
+    alignItems: 'center',
+  },
   title: {
-    fontSize: FontSizes['3xl'],
-    fontWeight: FontWeights.bold,
-    marginBottom: Spacing.xs,
+    fontSize: FontSizes.xl,
+    fontWeight: FontWeights.semibold,
   },
   subtitle: {
     fontSize: FontSizes.sm,
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
