@@ -452,3 +452,22 @@ export async function updateTemplateWithExercises(
 
   await transaction(statements);
 }
+
+/**
+ * Update the lastUsed timestamp for a workout template
+ *
+ * Called when a workout session is started from this template.
+ *
+ * @param id - Template ID
+ * @param timestamp - Timestamp to set as lastUsed
+ * @returns Promise that resolves when template is updated
+ */
+export async function updateTemplateLastUsed(
+  id: string,
+  timestamp: number
+): Promise<void> {
+  await execute(
+    'UPDATE workout_templates SET last_used = ?, updated_at = ? WHERE id = ?',
+    [timestamp, timestamp, id]
+  );
+}

@@ -17,14 +17,7 @@ import {
   updateTemplateWithExercises,
   deleteTemplate,
 } from '@/src/lib/db/repositories/templates';
-
-/**
- * Generate a unique ID for database records
- * Using timestamp + random string for simplicity (offline-first)
- */
-function generateId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
+import { generateId } from '@/src/lib/utils/id';
 
 /**
  * Fetch all workout templates

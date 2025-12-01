@@ -21,6 +21,8 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { WorkoutTemplate } from '@/types';
 import { fetchTemplateById } from '@/src/features/templates/api/templateService';
+import { startWorkoutFromTemplate } from '@/src/features/workouts/api/workoutService';
+import { workoutStore } from '@/src/stores/workoutStore';
 import { Button } from '@/components/ui/button';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -62,12 +64,25 @@ export default function StartWorkoutScreen() {
     }
   };
 
-  const handleStartWorkout = () => {
-    // TODO: Phase 2.3 - Create workout session and navigate to active workout
-    Alert.alert(
-      'Coming Soon',
-      'Workout session creation will be implemented in Phase 2.3'
-    );
+  const handleStartWorkout = async () => {
+    if (!template) {
+      Alert.alert('Error', 'No template selected');
+      return;
+    }
+
+    try {
+      // Create workout session from template
+      const session = await startWorkoutFromTemplate(template);
+
+      // Update global store with active session
+      workoutStore.setActiveSession(session);
+
+      // Navigate to active workout screen
+      router.replace(`/home/active-workout?workoutSessionId=${session.id}`);
+    } catch (error) {
+      console.error('Error starting workout:', error);
+      Alert.alert('Error', 'Failed to start workout. Please try again.');
+    }
   };
 
   const handleBack = () => {
