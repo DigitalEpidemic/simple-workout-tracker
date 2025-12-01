@@ -65,14 +65,17 @@ export default function StartWorkoutScreen() {
   };
 
   const handleStartWorkout = async () => {
-    if (!template) {
-      Alert.alert('Error', 'No template selected');
-      return;
-    }
-
     try {
-      // Create workout session from template
-      const session = await startWorkoutFromTemplate(template);
+      let session;
+
+      if (template) {
+        // Create workout session from template
+        session = await startWorkoutFromTemplate(template);
+      } else {
+        // Start empty workout (no template)
+        const { startEmptyWorkout } = await import('@/src/features/workouts/api/workoutService');
+        session = await startEmptyWorkout('Empty Workout');
+      }
 
       // Update global store with active session
       workoutStore.setActiveSession(session);
@@ -185,7 +188,7 @@ export default function StartWorkoutScreen() {
           <View style={styles.emptyState}>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>No Exercises</Text>
             <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
-              This workout has no exercises. Add exercises in Phase 2.3.
+              Start your workout and add exercises as you go.
             </Text>
           </View>
         )}
@@ -197,11 +200,10 @@ export default function StartWorkoutScreen() {
           title="Begin Workout"
           onPress={handleStartWorkout}
           fullWidth
-          disabled={exerciseCount === 0}
         />
         {exerciseCount === 0 && (
           <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
-            Add exercises before starting
+            You can add exercises during your workout
           </Text>
         )}
       </View>

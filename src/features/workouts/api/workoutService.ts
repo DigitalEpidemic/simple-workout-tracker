@@ -5,7 +5,12 @@
  */
 
 import { WorkoutSession, Exercise, WorkoutTemplate } from '@/types';
-import { createSessionWithExercises } from '@/src/lib/db/repositories/sessions';
+import {
+  createSessionWithExercises,
+  createExercise,
+  deleteExercise,
+  getExercisesBySessionId,
+} from '@/src/lib/db/repositories/sessions';
 import { updateTemplateLastUsed } from '@/src/lib/db/repositories/templates';
 import { generateId } from '@/src/lib/utils/id';
 
@@ -82,4 +87,57 @@ export async function startEmptyWorkout(name: string = 'Workout'): Promise<Worko
   await createSessionWithExercises(session);
 
   return session;
+}
+
+/**
+ * Add an exercise to an active workout session
+ *
+ * Creates a new exercise in the session with the next available order.
+ *
+ * @param sessionId - Workout session ID
+ * @param exerciseName - Name of the exercise to add
+ * @param notes - Optional exercise notes
+ * @returns Promise that resolves to the created exercise
+ */
+export async function addExerciseToSession(
+  sessionId: string,
+  exerciseName: string,
+  notes?: string
+): Promise<Exercise> {
+  const now = Date.now();
+  const exerciseId = generateId();
+
+  // Get current exercises to determine next order
+  const currentExercises = await getExercisesBySessionId(sessionId);
+  const nextOrder = currentExercises.length;
+
+  const exercise: Omit<Exercise, 'sets'> = {
+    id: exerciseId,
+    workoutSessionId: sessionId,
+    name: exerciseName,
+    order: nextOrder,
+    notes,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await createExercise(exercise);
+
+  // Return the exercise with empty sets array
+  return {
+    ...exercise,
+    sets: [],
+  };
+}
+
+/**
+ * Remove an exercise from an active workout session
+ *
+ * Deletes the exercise and all associated sets (CASCADE).
+ *
+ * @param exerciseId - Exercise ID to remove
+ * @returns Promise that resolves when exercise is deleted
+ */
+export async function removeExerciseFromSession(exerciseId: string): Promise<void> {
+  await deleteExercise(exerciseId);
 }

@@ -28,7 +28,6 @@ import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -88,7 +87,6 @@ function SetRow({
   };
 
   const handleDelete = () => {
-    swipeableRef.current?.close();
     Alert.alert("Remove Set", "Are you sure you want to remove this set?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -100,35 +98,26 @@ function SetRow({
   };
 
   // Render the delete action when swiped left
-  const renderRightActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
-  ) => {
-    const trans = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100],
-      extrapolate: "clamp",
-    });
-
+  const renderRightActions = () => {
     return (
-      <Animated.View
+      <Pressable
+        onPress={handleDelete}
         style={[
           styles.deleteAction,
           {
-            transform: [{ translateX: trans }],
             backgroundColor: colors.error,
           },
         ]}
       >
-        <Pressable onPress={handleDelete} style={styles.deleteButton}>
+        <View style={styles.deleteButton}>
           <Ionicons
             name="trash-outline"
             size={28}
             color={styles.deleteText.color}
           />
           <Text style={styles.deleteText}>Remove</Text>
-        </Pressable>
-      </Animated.View>
+        </View>
+      </Pressable>
     );
   };
 
@@ -136,9 +125,8 @@ function SetRow({
     <Swipeable
       ref={swipeableRef}
       renderRightActions={renderRightActions}
-      onSwipeableWillOpen={() => handleDelete()}
-      overshootRight={true}
-      rightThreshold={75}
+      overshootRight={false}
+      rightThreshold={80}
     >
       <View
         style={[
