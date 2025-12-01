@@ -12,6 +12,7 @@ export default function HistoryLayout() {
     >
       <Stack.Screen name="calendar" />
       <Stack.Screen name="workout-detail" />
+      <Stack.Screen name="exercise-history" />
     </Stack>
   );
 }

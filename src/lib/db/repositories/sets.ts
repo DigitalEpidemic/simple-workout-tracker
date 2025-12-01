@@ -391,3 +391,94 @@ export async function countTotalSetsBySessionId(
 
   return result?.count ?? 0;
 }
+
+/**
+ * Exercise history row - one row per workout session containing the exercise
+ */
+export interface ExerciseHistoryRow {
+  workoutSessionId: string;
+  workoutName: string;
+  workoutDate: number;
+  exerciseId: string;
+  totalSets: number;
+  completedSets: number;
+  totalVolume: number;
+  maxWeight: number;
+  totalReps: number;
+}
+
+/**
+ * Get exercise performance history by exercise name
+ *
+ * Returns aggregated performance data for each workout session where the exercise was performed.
+ * Ordered by most recent first.
+ *
+ * @param exerciseName - Exercise name (case-insensitive match)
+ * @returns Promise that resolves to array of exercise history rows
+ */
+export async function getExerciseHistory(
+  exerciseName: string
+): Promise<ExerciseHistoryRow[]> {
+  const rows = await query<{
+    workout_session_id: string;
+    workout_name: string;
+    workout_date: number;
+    exercise_id: string;
+    total_sets: number;
+    completed_sets: number;
+    total_volume: number;
+    max_weight: number;
+    total_reps: number;
+  }>(
+    `SELECT
+      wss.id as workout_session_id,
+      wss.name as workout_name,
+      wss.start_time as workout_date,
+      e.id as exercise_id,
+      COUNT(ws.id) as total_sets,
+      SUM(CASE WHEN ws.completed = 1 THEN 1 ELSE 0 END) as completed_sets,
+      SUM(CASE WHEN ws.completed = 1 THEN ws.reps * ws.weight ELSE 0 END) as total_volume,
+      MAX(CASE WHEN ws.completed = 1 THEN ws.weight ELSE 0 END) as max_weight,
+      SUM(CASE WHEN ws.completed = 1 THEN ws.reps ELSE 0 END) as total_reps
+     FROM workout_sessions wss
+     INNER JOIN exercises e ON e.workout_session_id = wss.id
+     INNER JOIN workout_sets ws ON ws.exercise_id = e.id
+     WHERE LOWER(e.name) = LOWER(?) AND wss.end_time IS NOT NULL
+     GROUP BY wss.id, e.id
+     ORDER BY wss.start_time DESC`,
+    [exerciseName]
+  );
+
+  return rows.map((row) => ({
+    workoutSessionId: row.workout_session_id,
+    workoutName: row.workout_name,
+    workoutDate: row.workout_date,
+    exerciseId: row.exercise_id,
+    totalSets: row.total_sets,
+    completedSets: row.completed_sets,
+    totalVolume: row.total_volume ?? 0,
+    maxWeight: row.max_weight ?? 0,
+    totalReps: row.total_reps ?? 0,
+  }));
+}
+
+/**
+ * Get all sets for a specific exercise from a specific workout
+ *
+ * @param exerciseId - Exercise ID
+ * @param workoutSessionId - Workout session ID
+ * @returns Promise that resolves to array of sets
+ */
+export async function getSetsByExerciseAndSession(
+  exerciseId: string,
+  workoutSessionId: string
+): Promise<WorkoutSet[]> {
+  const rows = await query<WorkoutSetRow>(
+    `SELECT * FROM workout_sets
+     WHERE exercise_id = ? AND workout_session_id = ?
+     ORDER BY set_number ASC`,
+    [exerciseId, workoutSessionId]
+  );
+
+  return rows.map(rowToWorkoutSet);
+}

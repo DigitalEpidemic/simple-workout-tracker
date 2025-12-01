@@ -293,6 +293,22 @@ export default function WorkoutDetailScreen() {
                     <Text style={[styles.exerciseName, { color: colors.text }]}>
                       {exercise.name}
                     </Text>
+                    <Pressable
+                      onPress={() =>
+                        router.push(
+                          `/history/exercise-history?exerciseName=${encodeURIComponent(
+                            exercise.name
+                          )}`
+                        )
+                      }
+                      style={styles.historyButton}
+                    >
+                      <Ionicons
+                        name="time-outline"
+                        size={20}
+                        color={colors.primary}
+                      />
+                    </Pressable>
                   </View>
                   <Text style={[styles.exerciseStats, { color: colors.textSecondary }]}>
                     {completedSets} {completedSets === 1 ? 'set' : 'sets'} completed
@@ -488,6 +504,10 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontWeight: FontWeights.semibold,
     flex: 1,
+  },
+  historyButton: {
+    padding: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
   exerciseStats: {
     fontSize: FontSizes.sm,
