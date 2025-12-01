@@ -1,0 +1,113 @@
+/**
+ * VolumeChart Component
+ *
+ * Displays total workout volume (reps × weight) over time as a line chart.
+ */
+
+import React from 'react';
+import { StyleSheet, useColorScheme, Dimensions } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+
+export interface VolumeDataPoint {
+  date: number; // Unix timestamp
+  totalVolume: number;
+}
+
+interface VolumeChartProps {
+  data: VolumeDataPoint[];
+  title?: string;
+}
+
+export function VolumeChart({ data, title = 'Volume Over Time' }: VolumeChartProps) {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const screenWidth = Dimensions.get('window').width;
+
+  // If no data, show empty state
+  if (data.length === 0) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText style={styles.title}>{title}</ThemedText>
+        <ThemedView style={styles.emptyState}>
+          <ThemedText style={styles.emptyText}>No data available</ThemedText>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
+
+  // Prepare data for chart
+  const labels = data.map((point) => {
+    const date = new Date(point.date);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  });
+
+  const values = data.map((point) => point.totalVolume);
+
+  const chartData = {
+    labels: labels.length > 6 ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0) : labels,
+    datasets: [
+      {
+        data: values,
+      },
+    ],
+  };
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.title}>{title}</ThemedText>
+      <LineChart
+        data={chartData}
+        width={screenWidth - 40}
+        height={220}
+        chartConfig={{
+          backgroundColor: colors.background,
+          backgroundGradientFrom: colors.backgroundSecondary,
+          backgroundGradientTo: colors.backgroundSecondary,
+          decimalPlaces: 0,
+          color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+          labelColor: (opacity = 1) => colorScheme === 'dark'
+            ? `rgba(156, 163, 175, ${opacity})`
+            : `rgba(107, 114, 128, ${opacity})`,
+          style: {
+            borderRadius: BorderRadius.lg,
+          },
+          propsForDots: {
+            r: '4',
+            strokeWidth: '2',
+            stroke: colors.primary,
+          },
+        }}
+        bezier
+        style={styles.chart}
+      />
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: Spacing.md,
+  },
+  chart: {
+    marginVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+  },
+  emptyState: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    opacity: 0.5,
+  },
+});
