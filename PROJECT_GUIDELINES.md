@@ -91,7 +91,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **3.4** ✅ Workout completion flow
 
 ### Phase 4 – History & Analytics
-- **4.1** ⏳ Workout history
+- **4.1** ✅ Workout history
 - **4.2** ⏳ Calendar view
 - **4.3** ⏳ Exercise history + previous set autofill
 - **4.4** ⏳ Analytics charts
@@ -158,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 3.4 (Workout completion flow)
+**Last Completed Phase:** 4.1 (Workout history)
 
-**Next Phase:** 4.1 (Workout history)
+**Next Phase:** 4.2 (Calendar view)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory

@@ -67,6 +67,23 @@ export async function getPRsByExerciseName(
 }
 
 /**
+ * Get all PR records achieved in a specific workout session
+ *
+ * @param sessionId - Workout session ID
+ * @returns Promise that resolves to array of PRs achieved in the session
+ */
+export async function getPRsBySessionId(
+  sessionId: string
+): Promise<PRRecord[]> {
+  const rows = await query<PRRecordRow>(
+    'SELECT * FROM pr_records WHERE workout_session_id = ? ORDER BY achieved_at DESC',
+    [sessionId]
+  );
+
+  return rows.map(rowToPRRecord);
+}
+
+/**
  * Get PR record for a specific exercise at a specific rep count
  *
  * @param exerciseName - Exercise name (normalized)
