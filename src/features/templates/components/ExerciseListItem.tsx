@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ExerciseTemplate } from '@/types';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -88,7 +89,7 @@ export function ExerciseListItem({
             onPress={onRemove}
             activeOpacity={0.7}
           >
-            <Text style={[styles.removeText, { color: colors.error }]}>�</Text>
+            <Ionicons name="trash-outline" size={20} color={colors.error} />
           </TouchableOpacity>
         )}
       </View>
@@ -143,10 +144,5 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  removeText: {
-    fontSize: 32,
-    fontWeight: FontWeights.bold,
-    lineHeight: 32,
   },
 });
