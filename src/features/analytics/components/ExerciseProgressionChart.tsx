@@ -48,13 +48,26 @@ export function ExerciseProgressionChart({
     );
   }
 
-  // Prepare data for chart
-  const labels = data.map((point) => {
+  // Group data by date and take the maximum weight for each date
+  const dataByDate = data.reduce((acc, point) => {
     const date = new Date(point.date);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  });
+    const dateKey = `${date.getMonth() + 1}/${date.getDate()}`;
 
-  const values = data.map((point) => point.maxWeight);
+    if (!acc[dateKey] || point.maxWeight > acc[dateKey].maxWeight) {
+      acc[dateKey] = {
+        dateKey,
+        maxWeight: point.maxWeight,
+        timestamp: point.date,
+      };
+    }
+
+    return acc;
+  }, {} as Record<string, { dateKey: string; maxWeight: number; timestamp: number }>);
+
+  // Convert to arrays sorted by timestamp
+  const groupedData = Object.values(dataByDate).sort((a, b) => a.timestamp - b.timestamp);
+  const labels = groupedData.map((point) => point.dateKey);
+  const values = groupedData.map((point) => point.maxWeight);
 
   const chartData = {
     labels: labels.length > 6 ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0) : labels,
