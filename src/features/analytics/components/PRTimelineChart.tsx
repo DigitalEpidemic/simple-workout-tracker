@@ -5,12 +5,12 @@
  * Shows PR count by date.
  */
 
-import React from 'react';
-import { StyleSheet, useColorScheme, Dimensions } from 'react-native';
-import { BarChart } from 'react-native-chart-kit';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import React from "react";
+import { Dimensions, StyleSheet, useColorScheme } from "react-native";
+import { BarChart } from "react-native-chart-kit";
 
 export interface PRDataPoint {
   date: number; // Unix timestamp
@@ -25,10 +25,14 @@ interface PRTimelineChartProps {
   subtitle?: string;
 }
 
-export function PRTimelineChart({ data, title = 'Personal Records', subtitle }: PRTimelineChartProps) {
+export function PRTimelineChart({
+  data,
+  title = "Personal Records",
+  subtitle,
+}: PRTimelineChartProps) {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const screenWidth = Dimensions.get('window').width;
+  const colors = Colors[colorScheme ?? "light"];
+  const screenWidth = Dimensions.get("window").width;
 
   // If no data, show empty state
   if (data.length === 0) {
@@ -58,7 +62,10 @@ export function PRTimelineChart({ data, title = 'Personal Records', subtitle }: 
   });
 
   const chartData = {
-    labels: labels.length > 6 ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0) : labels,
+    labels:
+      labels.length > 6
+        ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0)
+        : labels,
     datasets: [
       {
         data: counts.length > 0 ? counts : [0],
@@ -70,7 +77,8 @@ export function PRTimelineChart({ data, title = 'Personal Records', subtitle }: 
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>{title}</ThemedText>
       <ThemedText style={styles.subtitle}>
-        {subtitle || `${data.length} total PR${data.length !== 1 ? 's' : ''} achieved`}
+        {subtitle ||
+          `${data.length} total PR${data.length !== 1 ? "s" : ""} achieved`}
       </ThemedText>
       <BarChart
         data={chartData}
@@ -78,15 +86,18 @@ export function PRTimelineChart({ data, title = 'Personal Records', subtitle }: 
         height={220}
         yAxisLabel=""
         yAxisSuffix=" PRs"
+        fromZero
+        segments={Math.max(...counts)}
         chartConfig={{
           backgroundColor: colors.background,
           backgroundGradientFrom: colors.backgroundSecondary,
           backgroundGradientTo: colors.backgroundSecondary,
           decimalPlaces: 0,
           color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
-          labelColor: (opacity = 1) => colorScheme === 'dark'
-            ? `rgba(156, 163, 175, ${opacity})`
-            : `rgba(107, 114, 128, ${opacity})`,
+          labelColor: (opacity = 1) =>
+            colorScheme === "dark"
+              ? `rgba(156, 163, 175, ${opacity})`
+              : `rgba(107, 114, 128, ${opacity})`,
           style: {
             borderRadius: BorderRadius.lg,
           },
@@ -106,7 +117,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 2,
   },
   subtitle: {
@@ -120,8 +131,8 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyText: {
     opacity: 0.5,
