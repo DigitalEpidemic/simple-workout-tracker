@@ -61,14 +61,14 @@ export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
   const { convertWeight, getUnit } = useWeightDisplay();
 
   /**
-   * Format volume to a readable string with proper units
+   * Format volume to a readable string
    *
    * @param volume - Total volume in lbs (storage format)
-   * @returns Formatted string like "1,234 lbs" or "612 kg"
+   * @returns Formatted string like "1,234" or "612"
    */
   const formatVolume = (volume: number): string => {
     const converted = Math.round(convertWeight(volume));
-    return `${converted.toLocaleString()} ${getUnit()}`;
+    return converted.toLocaleString();
   };
 
   return (
@@ -128,7 +128,7 @@ export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
                 {formatVolume(workout.totalVolume)}
               </ThemedText>
               <ThemedText style={[styles.statLabel, { color: colors.textSecondary }]}>
-                volume
+                volume ({getUnit()})
               </ThemedText>
             </View>
           </View>

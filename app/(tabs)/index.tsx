@@ -21,7 +21,7 @@ import { WorkoutTemplate } from "@/types";
  */
 export default function HomeScreen() {
   const router = useRouter();
-  const { convertWeight } = useWeightDisplay();
+  const { convertWeight, getUnit } = useWeightDisplay();
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
@@ -144,7 +144,7 @@ export default function HomeScreen() {
               <ThemedText style={styles.statValue} numberOfLines={1}>
                 {loading ? "—" : formatVolume(totalVolume)}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>Total Volume</ThemedText>
+              <ThemedText style={styles.statLabel}>Volume ({getUnit()})</ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>

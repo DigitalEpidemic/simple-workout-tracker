@@ -122,7 +122,7 @@ function WorkoutPerformanceCard({
             {Math.round(convertWeight(performance.totalVolume)).toLocaleString()}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            volume
+            volume ({getUnit()})
           </Text>
         </View>
         <View style={styles.statItem}>
@@ -252,7 +252,7 @@ function StatisticsCard({
             {Math.round(convertWeight(statistics.avgVolume)).toLocaleString()}
           </Text>
           <Text style={[styles.gridLabel, { color: colors.textSecondary }]}>
-            Avg Volume
+            Avg Volume ({getUnit()})
           </Text>
         </View>
       </View>
