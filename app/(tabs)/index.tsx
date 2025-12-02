@@ -1,10 +1,13 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { WorkoutTemplate } from "@/types";
+import { getCompletedSessions } from "@/src/lib/db/repositories/sessions";
+import { fetchAllTemplates } from "@/src/features/templates/api/templateService";
 
 /**
  * Home Screen - Main landing screen
@@ -17,6 +20,50 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const [totalWorkouts, setTotalWorkouts] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(0);
+  const [recentTemplates, setRecentTemplates] = useState<WorkoutTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadHomeData();
+  }, []);
+
+  async function loadHomeData() {
+    try {
+      // Get total completed workouts
+      const allWorkouts = await getCompletedSessions(false);
+      setTotalWorkouts(allWorkouts.length);
+
+      // Calculate total workout duration
+      const totalSeconds = allWorkouts.reduce((sum, workout) => {
+        return sum + (workout.duration || 0);
+      }, 0);
+      setTotalDuration(totalSeconds);
+
+      // Get recent templates (sorted by lastUsed)
+      const templates = await fetchAllTemplates();
+      const sorted = templates
+        .filter((t) => t.lastUsed !== undefined)
+        .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
+        .slice(0, 5);
+      setRecentTemplates(sorted);
+    } catch (error) {
+      console.error("Failed to load home data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -27,15 +74,22 @@ export default function HomeScreen() {
           <ThemedText style={styles.subtitle}>Ready to train?</ThemedText>
         </ThemedView>
 
-        {/* Quick Stats */}
-        <ThemedView style={styles.statsContainer}>
-          <ThemedView style={styles.statCard}>
-            <ThemedText style={styles.statValue}>0</ThemedText>
-            <ThemedText style={styles.statLabel}>Total Workouts</ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.statCard}>
-            <ThemedText style={styles.statValue}>0</ThemedText>
-            <ThemedText style={styles.statLabel}>This Week</ThemedText>
+        {/* Lifetime Stats */}
+        <ThemedView style={styles.section}>
+          <ThemedText type="subtitle">Lifetime Stats</ThemedText>
+          <ThemedView style={styles.statsContainer}>
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statValue}>
+                {loading ? "—" : totalWorkouts}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>Workouts</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statValue}>
+                {loading ? "—" : formatDuration(totalDuration)}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>Time Trained</ThemedText>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
 
@@ -67,9 +121,36 @@ export default function HomeScreen() {
         {/* Recent Templates */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Recent Templates</ThemedText>
-          <ThemedText style={styles.emptyState}>
-            No templates yet. Create your first workout template!
-          </ThemedText>
+          {loading ? (
+            <ThemedText style={styles.emptyState}>Loading...</ThemedText>
+          ) : recentTemplates.length === 0 ? (
+            <ThemedText style={styles.emptyState}>
+              No templates yet. Create your first workout template!
+            </ThemedText>
+          ) : (
+            recentTemplates.map((template) => (
+              <Pressable
+                key={template.id}
+                style={styles.templateCard}
+                onPress={() => router.push(`/home/start-workout?templateId=${template.id}`)}
+              >
+                <ThemedView style={styles.templateInfo}>
+                  <ThemedText style={styles.templateName}>
+                    {template.name}
+                  </ThemedText>
+                  {template.description && (
+                    <ThemedText style={styles.templateDescription}>
+                      {template.description}
+                    </ThemedText>
+                  )}
+                  <ThemedText style={styles.templateMeta}>
+                    {template.exercises.length} {template.exercises.length === 1 ? 'exercise' : 'exercises'}
+                  </ThemedText>
+                </ThemedView>
+                <IconSymbol size={20} name="chevron.right" color="#007AFF" />
+              </Pressable>
+            ))
+          )}
         </ThemedView>
       </ScrollView>
     </ThemedView>
@@ -94,7 +175,6 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: "row",
-    padding: 20,
     gap: 12,
   },
   statCard: {
@@ -138,5 +218,31 @@ const styles = StyleSheet.create({
     padding: 20,
     textAlign: "center",
     opacity: 0.5,
+  },
+  templateCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    gap: 12,
+    marginBottom: 8,
+  },
+  templateInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  templateName: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  templateDescription: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  templateMeta: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginTop: 2,
   },
 });
