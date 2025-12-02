@@ -9,10 +9,15 @@ import React from 'react';
 import { StyleSheet, Pressable, View } from 'react-native';
 import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
-import { Colors, Spacing, FontSizes } from '@/constants/theme';
+import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
-import { WorkoutSummary } from '../api/historyService';
+import {
+  WorkoutSummary,
+  getDisplayNameForHistoryItem,
+  getWorkoutType,
+  getSecondaryInfoForHistoryItem,
+} from '../api/historyService';
 
 export interface WorkoutCardProps {
   workout: WorkoutSummary;
@@ -60,6 +65,10 @@ export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
   const colors = Colors[colorScheme];
   const { convertWeight, getUnit } = useWeightDisplay();
 
+  const workoutType = getWorkoutType(workout);
+  const displayName = getDisplayNameForHistoryItem(workout);
+  const secondaryInfo = getSecondaryInfoForHistoryItem(workout);
+
   /**
    * Format volume to a readable string
    *
@@ -70,6 +79,22 @@ export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
     const converted = Math.round(convertWeight(volume));
     return converted.toLocaleString();
   };
+
+  /**
+   * Get tag label and color based on workout type
+   */
+  const getTagInfo = () => {
+    switch (workoutType) {
+      case 'program':
+        return { label: 'Program Day', color: colors.success };
+      case 'template':
+        return { label: 'Template', color: colors.primary };
+      case 'free':
+        return { label: 'Free Workout', color: colors.textSecondary };
+    }
+  };
+
+  const tagInfo = getTagInfo();
 
   return (
     <Pressable onPress={onPress}>
@@ -91,15 +116,22 @@ export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
             </ThemedText>
           </View>
 
-          {/* Workout Name */}
-          <ThemedText type="defaultSemiBold" style={styles.name}>
-            {workout.name}
-          </ThemedText>
+          {/* Workout Name and Tag */}
+          <View style={styles.nameRow}>
+            <ThemedText type="defaultSemiBold" style={styles.name}>
+              {displayName}
+            </ThemedText>
+            <View style={[styles.tag, { backgroundColor: tagInfo.color + '20' }]}>
+              <ThemedText style={[styles.tagText, { color: tagInfo.color }]}>
+                {tagInfo.label}
+              </ThemedText>
+            </View>
+          </View>
 
-          {/* Template Name (if used) */}
-          {workout.templateName && workout.templateName !== workout.name && (
-            <ThemedText style={[styles.templateName, { color: colors.textSecondary }]}>
-              from {workout.templateName}
+          {/* Secondary Info (template name or program indicator) */}
+          {secondaryInfo && (
+            <ThemedText style={[styles.secondaryInfo, { color: colors.textSecondary }]}>
+              {secondaryInfo}
             </ThemedText>
           )}
 
@@ -155,11 +187,27 @@ const styles = StyleSheet.create({
   duration: {
     fontSize: FontSizes.sm,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
+  },
   name: {
     fontSize: FontSizes.lg,
-    marginBottom: Spacing.xs,
+    flex: 1,
   },
-  templateName: {
+  tag: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.sm,
+  },
+  tagText: {
+    fontSize: FontSizes.xs,
+    fontWeight: '600',
+  },
+  secondaryInfo: {
     fontSize: FontSizes.sm,
     marginBottom: Spacing.md,
     fontStyle: 'italic',

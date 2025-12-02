@@ -13,7 +13,11 @@ import { getCompletedSessions, getSessionById, deleteSession } from '@/src/lib/d
 export interface WorkoutSummary {
   id: string;
   name: string;
+  templateId?: string;
   templateName?: string;
+  programId?: string;
+  programDayId?: string;
+  programDayName?: string;
   date: number; // startTime timestamp
   duration?: number; // in seconds
   exerciseCount: number;
@@ -69,7 +73,11 @@ function sessionToSummary(session: WorkoutSession): WorkoutSummary {
   return {
     id: session.id,
     name: session.name,
+    templateId: session.templateId,
     templateName: session.templateName,
+    programId: session.programId,
+    programDayId: session.programDayId,
+    programDayName: session.programDayName,
     date: session.startTime,
     duration: session.duration,
     exerciseCount: session.exercises.length,
@@ -111,4 +119,76 @@ export async function getWorkoutById(id: string): Promise<WorkoutSession | null>
  */
 export async function deleteWorkout(id: string): Promise<void> {
   await deleteSession(id);
+}
+
+/**
+ * Get display name for a workout history item
+ *
+ * Determines the best name to show for a workout:
+ * - If from a program day, use the program day name
+ * - Otherwise, use the workout name
+ *
+ * @param workout - Workout summary or session
+ * @returns Display name for the workout
+ */
+export function getDisplayNameForHistoryItem(
+  workout: WorkoutSummary | WorkoutSession
+): string {
+  // Program day workouts show the day name
+  if (workout.programDayName) {
+    return workout.programDayName;
+  }
+
+  // Otherwise use the workout name
+  return workout.name;
+}
+
+/**
+ * Get workout type for a history item
+ *
+ * @param workout - Workout summary or session
+ * @returns 'program' if from a program, 'template' if from a template, 'free' otherwise
+ */
+export function getWorkoutType(
+  workout: WorkoutSummary | WorkoutSession
+): 'program' | 'template' | 'free' {
+  if (workout.programId && workout.programDayId) {
+    return 'program';
+  }
+
+  if (workout.templateId) {
+    return 'template';
+  }
+
+  return 'free';
+}
+
+/**
+ * Get secondary info text for a history item
+ *
+ * Shows the source of the workout (program name, template name, or nothing)
+ *
+ * @param workout - Workout summary or session
+ * @returns Secondary info text or undefined
+ */
+export function getSecondaryInfoForHistoryItem(
+  workout: WorkoutSummary | WorkoutSession
+): string | undefined {
+  const type = getWorkoutType(workout);
+
+  if (type === 'program') {
+    // For program workouts, show "from [program name]" if available
+    // Note: We'd need to fetch the program name from the database
+    // For now, just show "Program Day"
+    return 'Program Day';
+  }
+
+  if (type === 'template' && workout.templateName) {
+    // Show template name if it's different from the workout name
+    if (workout.templateName !== workout.name) {
+      return `from ${workout.templateName}`;
+    }
+  }
+
+  return undefined;
 }

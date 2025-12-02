@@ -162,7 +162,7 @@ React Native workout tracking application built with TypeScript, following offli
 
 - **8.6** History UI Integration
 
-  - **8.6.1** ✅ Workout history displays program day name instead of template name
+  - **8.6.1** ✅ Workout history displays program day name and workout type tags
   - **8.6.2** ⏳ Analytics updated to show progression per program day
   - **8.6.3** ⏳ PRs link back to program days
 
@@ -221,9 +221,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 8.5 (Multi-Day Program System - Core Complete)
+**Last Completed Phase:** 8.6.1 (History UI Integration - Workout Type Tags)
 
-**Next Phase:** 8.6 (History UI Integration) or 5.1 (Firebase setup)
+**Next Phase:** 8.6.2 (Analytics filtering by program), 8.6.3 (PR program linking), or 5.1 (Firebase setup)
 
 **Architecture:**
 
