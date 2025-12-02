@@ -5,9 +5,9 @@ import { Pressable, ScrollView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { WorkoutTemplate } from "@/types";
-import { getCompletedSessions } from "@/src/lib/db/repositories/sessions";
 import { fetchAllTemplates } from "@/src/features/templates/api/templateService";
+import { getCompletedSessions } from "@/src/lib/db/repositories/sessions";
+import { WorkoutTemplate } from "@/types";
 
 /**
  * Home Screen - Main landing screen
@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
   const [recentTemplates, setRecentTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,8 +32,8 @@ export default function HomeScreen() {
 
   async function loadHomeData() {
     try {
-      // Get total completed workouts
-      const allWorkouts = await getCompletedSessions(false);
+      // Get total completed workouts (with exercises to calculate volume)
+      const allWorkouts = await getCompletedSessions(true);
       setTotalWorkouts(allWorkouts.length);
 
       // Calculate total workout duration
@@ -40,6 +41,19 @@ export default function HomeScreen() {
         return sum + (workout.duration || 0);
       }, 0);
       setTotalDuration(totalSeconds);
+
+      // Calculate total volume (sum of reps * weight for all sets)
+      let volume = 0;
+      for (const workout of allWorkouts) {
+        for (const exercise of workout.exercises) {
+          for (const set of exercise.sets) {
+            if (set.completed) {
+              volume += set.reps * set.weight;
+            }
+          }
+        }
+      }
+      setTotalVolume(volume);
 
       // Get recent templates (sorted by lastUsed)
       const templates = await fetchAllTemplates();
@@ -63,6 +77,16 @@ export default function HomeScreen() {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
+  }
+
+  function formatVolume(volume: number): string {
+    if (volume >= 1000000) {
+      return `${(volume / 1000000).toFixed(1)}M`;
+    }
+    if (volume >= 1000) {
+      return `${(volume / 1000).toFixed(1)}K`;
+    }
+    return volume.toLocaleString();
   }
 
   return (
@@ -89,6 +113,12 @@ export default function HomeScreen() {
                 {loading ? "—" : formatDuration(totalDuration)}
               </ThemedText>
               <ThemedText style={styles.statLabel}>Time Trained</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.statCard}>
+              <ThemedText style={styles.statValue}>
+                {loading ? "—" : formatVolume(totalVolume)}
+              </ThemedText>
+              <ThemedText style={styles.statLabel}>Total Volume</ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -132,7 +162,9 @@ export default function HomeScreen() {
               <Pressable
                 key={template.id}
                 style={styles.templateCard}
-                onPress={() => router.push(`/home/start-workout?templateId=${template.id}`)}
+                onPress={() =>
+                  router.push(`/home/start-workout?templateId=${template.id}`)
+                }
               >
                 <ThemedView style={styles.templateInfo}>
                   <ThemedText style={styles.templateName}>
@@ -144,7 +176,8 @@ export default function HomeScreen() {
                     </ThemedText>
                   )}
                   <ThemedText style={styles.templateMeta}>
-                    {template.exercises.length} {template.exercises.length === 1 ? 'exercise' : 'exercises'}
+                    {template.exercises.length}{" "}
+                    {template.exercises.length === 1 ? "exercise" : "exercises"}
                   </ThemedText>
                 </ThemedView>
                 <IconSymbol size={20} name="chevron.right" color="#007AFF" />
@@ -175,11 +208,12 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   statCard: {
     flex: 1,
-    minWidth: 150,
+    minWidth: 100,
     padding: 16,
     borderRadius: 12,
     backgroundColor: "rgba(0, 122, 255, 0.1)",
