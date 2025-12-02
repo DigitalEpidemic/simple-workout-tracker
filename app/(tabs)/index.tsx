@@ -70,11 +70,33 @@ export default function HomeScreen() {
   }
 
   function formatDuration(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
 
+    if (years > 0) {
+      const remainingMonths = Math.floor((days % 365) / 30);
+      return remainingMonths > 0
+        ? `${years}y ${remainingMonths}mo`
+        : `${years}y`;
+    }
+    if (months > 0) {
+      const remainingDays = days % 30;
+      return remainingDays > 0
+        ? `${months}mo ${remainingDays}d`
+        : `${months}mo`;
+    }
+    if (days > 0) {
+      const remainingHours = hours % 24;
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    }
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      const remainingMinutes = minutes % 60;
+      return remainingMinutes > 0
+        ? `${hours}h ${remainingMinutes}m`
+        : `${hours}h`;
     }
     return `${minutes}m`;
   }
@@ -103,19 +125,19 @@ export default function HomeScreen() {
           <ThemedText type="subtitle">Lifetime Stats</ThemedText>
           <ThemedView style={styles.statsContainer}>
             <ThemedView style={styles.statCard}>
-              <ThemedText style={styles.statValue}>
+              <ThemedText style={styles.statValue} numberOfLines={1}>
                 {loading ? "—" : totalWorkouts}
               </ThemedText>
               <ThemedText style={styles.statLabel}>Workouts</ThemedText>
             </ThemedView>
             <ThemedView style={styles.statCard}>
-              <ThemedText style={styles.statValue}>
+              <ThemedText style={styles.statValue} numberOfLines={1}>
                 {loading ? "—" : formatDuration(totalDuration)}
               </ThemedText>
               <ThemedText style={styles.statLabel}>Time Trained</ThemedText>
             </ThemedView>
             <ThemedView style={styles.statCard}>
-              <ThemedText style={styles.statValue}>
+              <ThemedText style={styles.statValue} numberOfLines={1}>
                 {loading ? "—" : formatVolume(totalVolume)}
               </ThemedText>
               <ThemedText style={styles.statLabel}>Total Volume</ThemedText>
@@ -209,21 +231,22 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 4,
   },
   statCard: {
     flex: 1,
     minWidth: 100,
-    padding: 16,
+    height: 100,
+    padding: 4,
     borderRadius: 12,
     backgroundColor: "rgba(0, 122, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 23,
     fontWeight: "bold",
-    lineHeight: 40,
+    lineHeight: 28,
     textAlign: "center",
     width: "100%",
   },
