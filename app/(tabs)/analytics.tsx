@@ -13,16 +13,21 @@
  * - Interactive charts with tooltips
  */
 
-import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View, Pressable } from "react-native";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Spacing, Colors, FontSizes, FontWeights, BorderRadius } from "@/constants/theme";
+import {
+  BorderRadius,
+  Colors,
+  FontSizes,
+  FontWeights,
+  Spacing,
+} from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { ExerciseProgressionChart } from "@/src/features/analytics/components/ExerciseProgressionChart";
 import { ExerciseSelector } from "@/src/features/analytics/components/ExerciseSelector";
 import { PRTimelineChart } from "@/src/features/analytics/components/PRTimelineChart";
@@ -33,6 +38,7 @@ import {
   TimeRangeSelector,
 } from "@/src/features/analytics/components/TimeRangeSelector";
 import { VolumeChart } from "@/src/features/analytics/components/VolumeChart";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import {
   ExerciseProgressionPoint,
   getAverageWorkoutDuration,
@@ -203,29 +209,23 @@ export default function AnalyticsScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
             <View style={styles.statCardWrapper}>
-              <StatCard
-                label="Workouts"
-                value={totalWorkouts}
-                subtitle="sessions"
-              />
+              <StatCard label="Workouts" value={totalWorkouts} />
             </View>
             <View style={styles.statCardWrapper}>
               <StatCard
-                label="Total Volume"
+                label={`Volume (${getUnit()})`}
                 value={Math.round(convertWeight(totalVolume)).toLocaleString()}
-                subtitle={getUnit()}
               />
             </View>
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statCardWrapper}>
-              <StatCard label="PRs" value={prCount} subtitle="crushed" />
+              <StatCard label="PRs" value={prCount} />
             </View>
             <View style={styles.statCardWrapper}>
               <StatCard
-                label="Avg Duration"
+                label="Avg Workout"
                 value={formatDuration(avgDuration)}
-                subtitle="per workout"
               />
             </View>
           </View>
