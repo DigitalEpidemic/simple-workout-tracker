@@ -7,6 +7,7 @@ React Native workout tracking application built with TypeScript, following offli
 ## Engineering Assistant Instructions
 
 ### Core Responsibilities
+
 - Implement the project **task by task**, producing **full, complete code files** for each step
 - Follow the phased implementation plan outlined below
 - Reference all planning documents in `project_plan/` folder before implementing features
@@ -17,17 +18,20 @@ React Native workout tracking application built with TypeScript, following offli
 ### Technology Stack
 
 **Required:**
+
 - React Native + TypeScript
 - React Navigation
 - SQLite (offline-first local database)
 - Bulletproof React architecture (feature-based organization)
 
 **Future:**
+
 - Firebase (optional sync in Phase 5)
 
 ### Architecture Principles
 
 **Must follow:**
+
 - Feature-based organization (see `project_plan/1.1-folder-structure.md`)
 - Modular and clean architecture
 - Offline-first approach
@@ -36,6 +40,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **NO barrel files (index.ts/tsx for re-exports)** - Import directly from named files (e.g., `import { Button } from '@/components/ui/button'`, NOT `from '@/components/ui'`)
 
 **Existing structure to preserve:**
+
 - Top-level `components/` folder
 - Top-level `assets/` folder
 - Top-level `types.ts` file
@@ -45,6 +50,7 @@ React Native workout tracking application built with TypeScript, following offli
 ## Features to Implement
 
 ### Core MVP Features (Phases 1-4)
+
 - ✅ Workout templates (CRUD)
 - ✅ Exercises with sets/reps/weight
 - ✅ Rest timer
@@ -54,11 +60,13 @@ React Native workout tracking application built with TypeScript, following offli
 - ✅ Workout history
 
 ### Extended Features (Phase 4+)
+
 - 📋 Calendar view
 - 📋 PR tracking (1-12 reps)
 - 📋 Analytics (graphs, volume, PR timeline)
 
 ### Future Features (Phase 5+)
+
 - 📋 Firebase sync
 - 📋 Haptics and animations
 - 📋 Testing and deployment
@@ -68,11 +76,13 @@ React Native workout tracking application built with TypeScript, following offli
 ## Project Phases
 
 ### Phase 0 – Requirements Finalization
+
 - **0.1** ✅ Define TypeScript interfaces → `types.ts`
 - **0.2** ✅ Define app screens → `project_plan/0.2-screens-and-navigation.md`
 - **0.3** ✅ Define MVP vs extended features → `project_plan/0.3-mvp-vs-extended-features.md`
 
 ### Phase 1 – Base Architecture
+
 - **1.1** ✅ Project folder structure → `project_plan/1.1-folder-structure.md`
 - **1.2** ✅ Expo Router navigation setup → `project_plan/1.2-expo-router-notes.md`
 - **1.3** ✅ App theme
@@ -80,17 +90,20 @@ React Native workout tracking application built with TypeScript, following offli
 - **1.5** ✅ Database helper utilities
 
 ### Phase 2 – Template System
+
 - **2.1** ✅ CRUD for workout templates
 - **2.2** ✅ Template selection screen
 - **2.3** ✅ Starting a workout from a template
 
 ### Phase 3 – Active Workout System
+
 - **3.1** ✅ Workout session screen + timer
 - **3.2** ✅ Exercise screen (reps/sets/weight)
 - **3.3** ✅ Rest timer
 - **3.4** ✅ Workout completion flow
 
 ### Phase 4 – History & Analytics
+
 - **4.1** ✅ Workout history
 - **4.2** ✅ Calendar view
 - **4.3** ✅ Exercise history + previous set autofill
@@ -99,16 +112,64 @@ React Native workout tracking application built with TypeScript, following offli
 - **4.6** ✅ User settings (weight unit toggle: lbs/kg, default rest timer)
 
 ### Phase 5 – Sync
+
 - **5.1** ⏳ Firebase setup
 - **5.2** ⏳ Offline sync queue
 - **5.3** ⏳ Manual sync UI
 - **5.4** ⏳ Conflict resolution rules
 
 ### Phase 6 – UI Polish
+
 - **6.1** ⏳ Haptics, animations, visual improvements
 
 ### Phase 7 – Testing & Deployment
+
 - **7.1** ⏳ Unit tests, E2E tests, release builds
+
+### Phase 8 – Multi-Day Program System
+
+- **8.1** Data Model
+
+  - **8.1.1** ⏳ Create new SQLite tables: `programs`, `program_days`, `program_day_exercises`, `program_history`
+  - **8.1.2** ⏳ Migration scripts (create / alter / foreign keys)
+  - **8.1.3** ⏳ Add SQLite helper hooks for program execution + program history
+
+- **8.2** Program Management Screens
+
+  - **8.2.1** ⏳ Program list + Create Program screen
+  - **8.2.2** ⏳ Program Day Editor (add/edit/remove days)
+  - **8.2.3** ⏳ Day Exercise Editor (add/edit/remove exercises for each program day)
+
+- **8.3** Program Activation
+
+  - **8.3.1** ⏳ Mark a single active program
+  - **8.3.2** ⏳ Track `current_day_index`
+  - **8.3.3** ⏳ UI to switch the active program (optional)
+
+- **8.4** Program Day Execution
+
+  - **8.4.1** ⏳ “Next Program Day” screen
+  - **8.4.2** ⏳ “Choose Different Day” flow (flexible execution)
+  - **8.4.3** ⏳ Load program day + exercises from SQLite
+
+- **8.5** Program Progression Logic
+
+  - **8.5.1** ⏳ Insert `program_history` record when completing a workout
+  - **8.5.2** ⏳ Increment `current_day_index`
+  - **8.5.3** ⏳ Loop back to day 0 when program ends
+  - **8.5.4** ⏳ Support performing a day earlier/later than planned (run any day on any date)
+
+- **8.6** History UI Integration
+
+  - **8.6.1** ⏳ Workout history displays program day name instead of template name
+  - **8.6.2** ⏳ Analytics updated to show progression per program day
+  - **8.6.3** ⏳ PRs link back to program days
+
+- **8.7** Optional Enhancements
+  - **8.7.1** ⏳ Drag-and-drop reordering of program days
+  - **8.7.2** ⏳ Auto-progress only if > X hours since last workout
+  - **8.7.3** ⏳ Per-day auto-progression rules
+  - **8.7.4** ⏳ Converter: Templates → Programs migration wizard
 
 ---
 
@@ -126,6 +187,7 @@ React Native workout tracking application built with TypeScript, following offli
 ### Expected Output Format
 
 For each phase implementation:
+
 - Full, production-ready code files
 - No TODO comments or placeholders
 - Follow existing code style and patterns
@@ -163,6 +225,7 @@ For each phase implementation:
 **Next Phase:** 5.1 (Firebase setup)
 
 **Architecture:**
+
 - **Routing:** Expo Router (file-based routing) in `app/` directory
 - **Business Logic:** Feature modules in `src/features/`
 - **Shared Code:** `src/lib/` and `src/stores/`
@@ -171,6 +234,7 @@ For each phase implementation:
 - **Weight Units:** User can toggle between **lbs** and **kg** in Settings. All weights stored in lbs, converted on display. Use `useWeightDisplay()` hook for formatting.
 
 **Navigation Structure:**
+
 ```
 app/
 ├── _layout.tsx              # Root stack navigator
@@ -218,6 +282,7 @@ When implementation is complete, respond with:
 ## Maintenance
 
 This file should be updated after each phase completion to:
+
 - Mark phase as complete (✅)
 - Update "Current Project Status"
 - Add any new constraints or learnings
