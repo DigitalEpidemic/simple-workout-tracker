@@ -31,17 +31,17 @@ export default function SettingsScreen() {
           <ThemedText type="subtitle">Workout Preferences</ThemedText>
 
           <ThemedView style={styles.settingRow}>
-            <ThemedView style={styles.settingInfo}>
+            <View style={styles.settingInfo}>
               <ThemedText style={styles.settingLabel}>Weight Unit</ThemedText>
               <ThemedText style={styles.settingDescription}>Currently: lbs</ThemedText>
-            </ThemedView>
+            </View>
           </ThemedView>
 
           <ThemedView style={styles.settingRow}>
-            <ThemedView style={styles.settingInfo}>
+            <View style={styles.settingInfo}>
               <ThemedText style={styles.settingLabel}>Default Rest Time</ThemedText>
               <ThemedText style={styles.settingDescription}>Currently: 90 seconds</ThemedText>
-            </ThemedView>
+            </View>
           </ThemedView>
         </ThemedView>
 
@@ -50,12 +50,12 @@ export default function SettingsScreen() {
           <ThemedText type="subtitle">App Preferences</ThemedText>
 
           <ThemedView style={styles.settingRow}>
-            <ThemedView style={styles.settingInfo}>
+            <View style={styles.settingInfo}>
               <ThemedText style={styles.settingLabel}>Haptic Feedback</ThemedText>
               <ThemedText style={styles.settingDescription}>
                 Vibrate on button presses
               </ThemedText>
-            </ThemedView>
+            </View>
             <Switch value={hapticsEnabled} onValueChange={setHapticsEnabled} />
           </ThemedView>
         </ThemedView>

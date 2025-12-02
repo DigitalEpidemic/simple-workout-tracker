@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -185,7 +185,7 @@ export default function HomeScreen() {
                   router.push(`/home/start-workout?templateId=${template.id}`)
                 }
               >
-                <ThemedView style={styles.templateInfo}>
+                <View style={styles.templateInfo}>
                   <ThemedText style={styles.templateName}>
                     {template.name}
                   </ThemedText>
@@ -198,7 +198,7 @@ export default function HomeScreen() {
                     {template.exercises.length}{" "}
                     {template.exercises.length === 1 ? "exercise" : "exercises"}
                   </ThemedText>
-                </ThemedView>
+                </View>
                 <IconSymbol size={20} name="chevron.right" color="#007AFF" />
               </Pressable>
             ))
