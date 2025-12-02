@@ -13,7 +13,7 @@ export default function ProgramsLayout() {
         name="program-list"
         options={{
           title: 'Programs',
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen
