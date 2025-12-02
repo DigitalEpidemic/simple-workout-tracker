@@ -30,6 +30,7 @@ import {
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ExerciseProgressionChart } from "@/src/features/analytics/components/ExerciseProgressionChart";
 import { ExerciseSelector } from "@/src/features/analytics/components/ExerciseSelector";
+import { FilterSelector } from "@/src/features/analytics/components/FilterSelector";
 import { PRTimelineChart } from "@/src/features/analytics/components/PRTimelineChart";
 import { SectionHeader } from "@/src/features/analytics/components/SectionHeader";
 import { StatCard } from "@/src/features/analytics/components/StatCard";
@@ -38,6 +39,7 @@ import {
   TimeRangeSelector,
 } from "@/src/features/analytics/components/TimeRangeSelector";
 import { VolumeChart } from "@/src/features/analytics/components/VolumeChart";
+import { AnalyticsFilter, DEFAULT_ANALYTICS_FILTER } from "@/src/features/analytics/types/filters";
 import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import {
   ExerciseProgressionPoint,
@@ -107,6 +109,7 @@ export default function AnalyticsScreen() {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [selectedExercise, setSelectedExercise] = useState<string>("");
   const [exerciseList, setExerciseList] = useState<string[]>([]);
+  const [filter, setFilter] = useState<AnalyticsFilter>(DEFAULT_ANALYTICS_FILTER);
 
   // Stats
   const [totalWorkouts, setTotalWorkouts] = useState<number>(0);
@@ -123,19 +126,19 @@ export default function AnalyticsScreen() {
 
   const [loading, setLoading] = useState(true);
 
-  // Load exercise list on mount
+  // Load exercise list on mount or when filter changes
   useEffect(() => {
     loadExerciseList();
-  }, []);
+  }, [filter]);
 
-  // Load analytics data when time range or selected exercise changes
+  // Load analytics data when time range, selected exercise, or filter changes
   useEffect(() => {
     loadAnalyticsData();
-  }, [timeRange, selectedExercise]);
+  }, [timeRange, selectedExercise, filter]);
 
   async function loadExerciseList() {
     try {
-      const exercises = await getUniqueExerciseNames();
+      const exercises = await getUniqueExerciseNames(filter);
       setExerciseList(exercises);
       if (exercises.length > 0 && !selectedExercise) {
         setSelectedExercise(exercises[0]);
@@ -152,10 +155,10 @@ export default function AnalyticsScreen() {
 
       // Load stats
       const [workouts, volume, duration, prs] = await Promise.all([
-        getTotalWorkoutCount(startDate, endDate),
-        getTotalVolume(startDate, endDate),
-        getAverageWorkoutDuration(startDate, endDate),
-        getPRCount(startDate, endDate),
+        getTotalWorkoutCount(startDate, endDate, filter),
+        getTotalVolume(startDate, endDate, filter),
+        getAverageWorkoutDuration(startDate, endDate, filter),
+        getPRCount(startDate, endDate, filter),
       ]);
 
       setTotalWorkouts(workouts);
@@ -165,8 +168,8 @@ export default function AnalyticsScreen() {
 
       // Load chart data
       const [volumeChartData, prTimeline] = await Promise.all([
-        getVolumeOverTime(startDate, endDate),
-        getPRTimeline(startDate, endDate),
+        getVolumeOverTime(startDate, endDate, filter),
+        getPRTimeline(startDate, endDate, filter),
       ]);
 
       setVolumeData(volumeChartData);
@@ -174,7 +177,7 @@ export default function AnalyticsScreen() {
 
       // Load progression data for selected exercise
       if (selectedExercise) {
-        const progression = await getExerciseProgression(selectedExercise, 50);
+        const progression = await getExerciseProgression(selectedExercise, 50, filter);
         setProgressionData(progression);
       } else {
         setProgressionData([]);
@@ -200,6 +203,12 @@ export default function AnalyticsScreen() {
 
         {/* Time Range Selector */}
         <TimeRangeSelector selected={timeRange} onChange={setTimeRange} />
+
+        {/* Filter Selector */}
+        <FilterSelector
+          selectedFilter={filter}
+          onFilterChange={setFilter}
+        />
 
         {/* Summary Stats Section */}
         <SectionHeader

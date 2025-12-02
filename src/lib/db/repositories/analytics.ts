@@ -3,9 +3,11 @@
  *
  * Data access layer for analytics and statistics.
  * Handles aggregated queries for volume tracking, exercise progression, and PR timelines.
+ * Supports filtering by program, template, or workout type.
  */
 
 import { query, getOne } from '../helpers';
+import { AnalyticsFilter, buildFilterWhereClause } from '@/src/features/analytics/types/filters';
 
 /**
  * Volume data point for charts
@@ -47,12 +49,26 @@ export interface PRTimelinePoint {
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to array of volume data points
  */
 export async function getVolumeOverTime(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<VolumeDataPoint[]> {
+  const baseWhere = 'wss.start_time >= ? AND wss.start_time <= ? AND wss.end_time IS NOT NULL AND ws.completed = 1';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const rows = await query<{
     date: number;
     total_volume: number;
@@ -67,13 +83,10 @@ export async function getVolumeOverTime(
       SUM(ws.reps) as total_reps
      FROM workout_sessions wss
      INNER JOIN workout_sets ws ON ws.workout_session_id = wss.id
-     WHERE wss.start_time >= ?
-       AND wss.start_time <= ?
-       AND wss.end_time IS NOT NULL
-       AND ws.completed = 1
+     WHERE ${whereClause}
      GROUP BY date_str
      ORDER BY date ASC`,
-    [startDate, endDate]
+    params
   );
 
   return rows.map((row) => ({
@@ -91,12 +104,28 @@ export async function getVolumeOverTime(
  *
  * @param exerciseName - Exercise name (case-insensitive)
  * @param limit - Maximum number of data points to return (default 50)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to array of progression data points
  */
 export async function getExerciseProgression(
   exerciseName: string,
-  limit: number = 50
+  limit: number = 50,
+  filter?: AnalyticsFilter
 ): Promise<ExerciseProgressionPoint[]> {
+  const baseWhere = 'LOWER(e.name) = LOWER(?) AND wss.end_time IS NOT NULL AND ws.completed = 1';
+  const params: any[] = [exerciseName];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
+  params.push(limit);
+
   const rows = await query<{
     date: number;
     workout_session_id: string;
@@ -115,13 +144,11 @@ export async function getExerciseProgression(
      FROM workout_sessions wss
      INNER JOIN exercises e ON e.workout_session_id = wss.id
      INNER JOIN workout_sets ws ON ws.exercise_id = e.id
-     WHERE LOWER(e.name) = LOWER(?)
-       AND wss.end_time IS NOT NULL
-       AND ws.completed = 1
+     WHERE ${whereClause}
      GROUP BY wss.id
      ORDER BY wss.start_time DESC
      LIMIT ?`,
-    [exerciseName, limit]
+    params
   );
 
   // Reverse to show oldest first (chronological order for charts)
@@ -142,12 +169,26 @@ export async function getExerciseProgression(
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to array of PR timeline data points
  */
 export async function getPRTimeline(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<PRTimelinePoint[]> {
+  const baseWhere = 'pr.achieved_at >= ? AND pr.achieved_at <= ?';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const rows = await query<{
     date: number;
     exercise_name: string;
@@ -156,15 +197,16 @@ export async function getPRTimeline(
     workout_session_id: string;
   }>(
     `SELECT
-      achieved_at as date,
-      exercise_name,
-      reps,
-      weight,
-      workout_session_id
-     FROM pr_records
-     WHERE achieved_at >= ? AND achieved_at <= ?
-     ORDER BY achieved_at ASC`,
-    [startDate, endDate]
+      pr.achieved_at as date,
+      pr.exercise_name,
+      pr.reps,
+      pr.weight,
+      pr.workout_session_id
+     FROM pr_records pr
+     INNER JOIN workout_sessions wss ON pr.workout_session_id = wss.id
+     WHERE ${whereClause}
+     ORDER BY pr.achieved_at ASC`,
+    params
   );
 
   return rows.map((row) => ({
@@ -179,15 +221,29 @@ export async function getPRTimeline(
 /**
  * Get all unique exercise names from completed workouts
  *
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to array of exercise names
  */
-export async function getUniqueExerciseNames(): Promise<string[]> {
+export async function getUniqueExerciseNames(filter?: AnalyticsFilter): Promise<string[]> {
+  const baseWhere = 'wss.end_time IS NOT NULL';
+  const params: any[] = [];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const rows = await query<{ name: string }>(
     `SELECT DISTINCT e.name
      FROM exercises e
      INNER JOIN workout_sessions wss ON e.workout_session_id = wss.id
-     WHERE wss.end_time IS NOT NULL
-     ORDER BY e.name ASC`
+     WHERE ${whereClause}
+     ORDER BY e.name ASC`,
+    params
   );
 
   return rows.map((row) => row.name);
@@ -198,17 +254,31 @@ export async function getUniqueExerciseNames(): Promise<string[]> {
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to total count
  */
 export async function getTotalWorkoutCount(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<number> {
+  const baseWhere = 'start_time >= ? AND start_time <= ? AND end_time IS NOT NULL';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter);
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const result = await getOne<{ count: number }>(
     `SELECT COUNT(*) as count
      FROM workout_sessions
-     WHERE start_time >= ? AND start_time <= ? AND end_time IS NOT NULL`,
-    [startDate, endDate]
+     WHERE ${whereClause}`,
+    params
   );
 
   return result?.count ?? 0;
@@ -219,21 +289,32 @@ export async function getTotalWorkoutCount(
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to total volume
  */
 export async function getTotalVolume(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<number> {
+  const baseWhere = 'wss.start_time >= ? AND wss.start_time <= ? AND wss.end_time IS NOT NULL AND ws.completed = 1';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const result = await getOne<{ total_volume: number | null }>(
     `SELECT SUM(ws.reps * ws.weight) as total_volume
      FROM workout_sessions wss
      INNER JOIN workout_sets ws ON ws.workout_session_id = wss.id
-     WHERE wss.start_time >= ?
-       AND wss.start_time <= ?
-       AND wss.end_time IS NOT NULL
-       AND ws.completed = 1`,
-    [startDate, endDate]
+     WHERE ${whereClause}`,
+    params
   );
 
   return result?.total_volume ?? 0;
@@ -244,17 +325,31 @@ export async function getTotalVolume(
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to average duration in seconds
  */
 export async function getAverageWorkoutDuration(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<number> {
+  const baseWhere = 'start_time >= ? AND start_time <= ? AND end_time IS NOT NULL';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter);
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const result = await getOne<{ avg_duration: number | null }>(
     `SELECT AVG(duration) as avg_duration
      FROM workout_sessions
-     WHERE start_time >= ? AND start_time <= ? AND end_time IS NOT NULL`,
-    [startDate, endDate]
+     WHERE ${whereClause}`,
+    params
   );
 
   return result?.avg_duration ?? 0;
@@ -265,17 +360,32 @@ export async function getAverageWorkoutDuration(
  *
  * @param startDate - Start timestamp (inclusive)
  * @param endDate - End timestamp (inclusive)
+ * @param filter - Optional filter by program, template, or workout type
  * @returns Promise that resolves to total PR count
  */
 export async function getPRCount(
   startDate: number,
-  endDate: number
+  endDate: number,
+  filter?: AnalyticsFilter
 ): Promise<number> {
+  const baseWhere = 'pr.achieved_at >= ? AND pr.achieved_at <= ?';
+  const params: any[] = [startDate, endDate];
+
+  let whereClause = baseWhere;
+  if (filter) {
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'wss');
+    if (filterClause) {
+      whereClause = `${baseWhere} AND ${filterClause}`;
+      params.push(...filterParams);
+    }
+  }
+
   const result = await getOne<{ count: number }>(
     `SELECT COUNT(*) as count
-     FROM pr_records
-     WHERE achieved_at >= ? AND achieved_at <= ?`,
-    [startDate, endDate]
+     FROM pr_records pr
+     INNER JOIN workout_sessions wss ON pr.workout_session_id = wss.id
+     WHERE ${whereClause}`,
+    params
   );
 
   return result?.count ?? 0;
