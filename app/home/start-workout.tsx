@@ -19,10 +19,11 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { WorkoutTemplate } from '@/types';
+import { WorkoutTemplate, ProgramDay } from '@/types';
 import { fetchTemplateById } from '@/src/features/templates/api/templateService';
 import { startWorkoutFromTemplate } from '@/src/features/workouts/api/workoutService';
 import { workoutStore } from '@/src/stores/workoutStore';
+import * as programRepo from '@/src/lib/db/repositories/programs';
 import { Button } from '@/components/ui/button';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -40,23 +41,39 @@ export default function StartWorkoutScreen() {
   const { displayWeight } = useWeightDisplay();
 
   const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
+  const [programDay, setProgramDay] = useState<ProgramDay | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // TODO Phase 8: Load program day if programDayId is provided
-  // When programDayId is provided:
-  // 1. Fetch program day exercises using getProgramDayById(programDayId)
-  // 2. Convert exercises to template format for display
-  // 3. Store programId, programDayId, programDayName in session on start
 
   useEffect(() => {
     if (programDayId) {
-      // TODO: Load program day instead of template
-      console.log('TODO: Load program day', programDayId);
+      loadProgramDay();
+    } else {
+      loadTemplate();
+    }
+  }, [templateId, programDayId]);
+
+  const loadProgramDay = async () => {
+    if (!programDayId) {
       setLoading(false);
       return;
     }
-    loadTemplate();
-  }, [templateId, programDayId]);
+
+    try {
+      const day = await programRepo.getProgramDayById(programDayId as string);
+      if (!day) {
+        Alert.alert('Error', 'Program day not found');
+        router.back();
+        return;
+      }
+      setProgramDay(day);
+    } catch (error) {
+      console.error('Error loading program day:', error);
+      Alert.alert('Error', 'Failed to load program day');
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadTemplate = async () => {
     if (!templateId) {
@@ -86,7 +103,41 @@ export default function StartWorkoutScreen() {
     try {
       let session;
 
-      if (template) {
+      if (programDay) {
+        // Create workout session from program day
+        const { generateId } = await import('@/src/lib/utils/id');
+        const { createSessionWithExercises } = await import('@/src/lib/db/repositories/sessions');
+
+        const now = Date.now();
+        const sessionId = generateId();
+
+        // Create exercise instances from program day exercises
+        const exercises = programDay.exercises.map((ex, index) => ({
+          id: generateId(),
+          workoutSessionId: sessionId,
+          name: ex.exerciseName,
+          order: ex.order ?? index,
+          sets: [],
+          notes: ex.notes,
+          createdAt: now,
+          updatedAt: now,
+        }));
+
+        // Create workout session with program context
+        session = {
+          id: sessionId,
+          programId: programId as string,
+          programDayId: programDay.id,
+          programDayName: programDay.name,
+          name: programDay.name,
+          exercises,
+          startTime: now,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await createSessionWithExercises(session);
+      } else if (template) {
         // Create workout session from template
         session = await startWorkoutFromTemplate(template);
       } else {
@@ -118,9 +169,21 @@ export default function StartWorkoutScreen() {
     );
   }
 
-  const workoutName = template?.name || 'Empty Workout';
-  const exerciseCount = template?.exercises.length || 0;
-  const exercises = template?.exercises || [];
+  // Display logic handles both template and program day
+  const workoutName = programDay?.name || template?.name || 'Empty Workout';
+  const exerciseCount = programDay?.exercises.length || template?.exercises.length || 0;
+
+  // Convert program day exercises to template-like format for display
+  const exercises = programDay
+    ? programDay.exercises.map((ex) => ({
+        id: ex.id,
+        name: ex.exerciseName,
+        targetSets: ex.targetSets,
+        targetReps: ex.targetReps,
+        targetWeight: ex.targetWeight,
+        notes: ex.notes,
+      }))
+    : template?.exercises || [];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

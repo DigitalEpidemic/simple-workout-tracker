@@ -13,10 +13,9 @@ import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export interface ProgramCardProps {
-  program: Omit<Program, 'days'> & { dayCount: number };
+  program: Omit<Program, 'days'>;
   onPress?: () => void;
   onActivate?: () => void;
-  onEdit?: () => void;
   onDelete?: () => void;
 }
 
@@ -24,7 +23,6 @@ export function ProgramCard({
   program,
   onPress,
   onActivate,
-  onEdit,
   onDelete,
 }: ProgramCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
@@ -56,17 +54,8 @@ export function ProgramCard({
           </View>
         </View>
 
-        <View style={styles.stats}>
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>
-              {program.dayCount}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              {program.dayCount === 1 ? 'Day' : 'Days'}
-            </Text>
-          </View>
-
-          {program.isActive && (
+        {program.isActive && (
+          <View style={styles.stats}>
             <View style={styles.stat}>
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>
                 Day {program.currentDayIndex + 1}
@@ -75,10 +64,10 @@ export function ProgramCard({
                 Next Up
               </Text>
             </View>
-          )}
-        </View>
+          </View>
+        )}
 
-        {(onActivate || onEdit || onDelete) && (
+        {(onActivate || onPress || onDelete) && (
           <View style={[styles.actions, { borderTopColor: colors.border }]}>
             {!program.isActive && onActivate && (
               <TouchableOpacity
@@ -91,10 +80,10 @@ export function ProgramCard({
                 </Text>
               </TouchableOpacity>
             )}
-            {onEdit && (
+            {onPress && (
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={onEdit}
+                onPress={onPress}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.actionText, { color: colors.primary }]}>

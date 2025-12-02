@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -8,7 +8,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { fetchAllTemplates } from "@/src/features/templates/api/templateService";
 import { getCompletedSessions } from "@/src/lib/db/repositories/sessions";
-import { WorkoutTemplate } from "@/types";
+import { getActiveProgramInfo } from "@/src/features/programs/api/programService";
+import { WorkoutTemplate, Program, ProgramDay } from "@/types";
 
 /**
  * Home Screen - Main landing screen
@@ -27,10 +28,30 @@ export default function HomeScreen() {
   const [totalVolume, setTotalVolume] = useState(0);
   const [recentTemplates, setRecentTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeProgram, setActiveProgram] = useState<{
+    program: Program;
+    nextDay: ProgramDay;
+  } | null>(null);
+
+  // Use useFocusEffect to reload active program when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadActiveProgram();
+    }, [])
+  );
 
   useEffect(() => {
     loadHomeData();
   }, []);
+
+  async function loadActiveProgram() {
+    try {
+      const programInfo = await getActiveProgramInfo();
+      setActiveProgram(programInfo);
+    } catch (error) {
+      console.error("Failed to load active program:", error);
+    }
+  }
 
   async function loadHomeData() {
     try {
@@ -148,6 +169,66 @@ export default function HomeScreen() {
             </ThemedView>
           </ThemedView>
         </ThemedView>
+        {/* Active Program */}
+        {activeProgram && (
+          <ThemedView style={styles.section}>
+            <ThemedText type="subtitle">Active Program</ThemedText>
+            <ThemedView style={styles.programCard}>
+              <View style={styles.programHeader}>
+                <View style={styles.programInfo}>
+                  <ThemedText style={styles.programName}>
+                    {activeProgram.program.name}
+                  </ThemedText>
+                  {activeProgram.program.description && (
+                    <ThemedText style={styles.programDescription}>
+                      {activeProgram.program.description}
+                    </ThemedText>
+                  )}
+                  <ThemedText style={styles.programNextDay}>
+                    Next: Day {activeProgram.nextDay.dayIndex + 1} -{" "}
+                    {activeProgram.nextDay.name}
+                  </ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.programActions}>
+                <Pressable
+                  style={styles.programActionButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/home/start-workout",
+                      params: {
+                        programId: activeProgram.program.id,
+                        programDayId: activeProgram.nextDay.id,
+                      },
+                    })
+                  }
+                >
+                  <IconSymbol size={20} name="play.fill" color="#007AFF" />
+                  <ThemedText style={styles.programActionText}>
+                    Start Next Day
+                  </ThemedText>
+                </Pressable>
+
+                <Pressable
+                  style={styles.programActionButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/programs/select-program-day",
+                      params: { programId: activeProgram.program.id },
+                    })
+                  }
+                >
+                  <IconSymbol size={20} name="list.bullet" color="#007AFF" />
+                  <ThemedText style={styles.programActionText}>
+                    Choose Day
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </ThemedView>
+          </ThemedView>
+        )}
+
         {/* Quick Actions */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Quick Start</ThemedText>
@@ -313,5 +394,50 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.6,
     marginTop: 2,
+  },
+  programCard: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 122, 255, 0.15)",
+    gap: 12,
+  },
+  programHeader: {
+    gap: 4,
+  },
+  programInfo: {
+    gap: 4,
+  },
+  programName: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  programDescription: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  programNextDay: {
+    fontSize: 14,
+    fontWeight: "600",
+    opacity: 0.8,
+    marginTop: 4,
+  },
+  programActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  programActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 122, 255, 0.2)",
+    gap: 6,
+  },
+  programActionText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

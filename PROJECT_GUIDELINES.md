@@ -61,9 +61,10 @@ React Native workout tracking application built with TypeScript, following offli
 
 ### Extended Features (Phase 4+)
 
-- 📋 Calendar view
-- 📋 PR tracking (1-12 reps)
-- 📋 Analytics (graphs, volume, PR timeline)
+- ✅ Calendar view
+- ✅ PR tracking (1-12 reps)
+- ✅ Analytics (graphs, volume, PR timeline)
+- ✅ Multi-day program system (Phases 8.1-8.5)
 
 ### Future Features (Phase 5+)
 
@@ -142,26 +143,26 @@ React Native workout tracking application built with TypeScript, following offli
 
 - **8.3** Program Activation
 
-  - **8.3.1** ⏳ Mark a single active program
-  - **8.3.2** ⏳ Track `current_day_index`
-  - **8.3.3** ⏳ UI to switch the active program (optional)
+  - **8.3.1** ✅ Mark a single active program
+  - **8.3.2** ✅ Track `current_day_index`
+  - **8.3.3** ✅ UI to switch the active program (optional)
 
 - **8.4** Program Day Execution
 
-  - **8.4.1** ⏳ “Next Program Day” screen
-  - **8.4.2** ⏳ “Choose Different Day” flow (flexible execution)
-  - **8.4.3** ⏳ Load program day + exercises from SQLite
+  - **8.4.1** ✅ "Next Program Day" screen
+  - **8.4.2** ✅ "Choose Different Day" flow (flexible execution)
+  - **8.4.3** ✅ Load program day + exercises from SQLite
 
 - **8.5** Program Progression Logic
 
-  - **8.5.1** ⏳ Insert `program_history` record when completing a workout
-  - **8.5.2** ⏳ Increment `current_day_index`
-  - **8.5.3** ⏳ Loop back to day 0 when program ends
-  - **8.5.4** ⏳ Support performing a day earlier/later than planned (run any day on any date)
+  - **8.5.1** ✅ Insert `program_history` record when completing a workout
+  - **8.5.2** ✅ Increment `current_day_index`
+  - **8.5.3** ✅ Loop back to day 0 when program ends
+  - **8.5.4** ✅ Support performing a day earlier/later than planned (run any day on any date)
 
 - **8.6** History UI Integration
 
-  - **8.6.1** ⏳ Workout history displays program day name instead of template name
+  - **8.6.1** ✅ Workout history displays program day name instead of template name
   - **8.6.2** ⏳ Analytics updated to show progression per program day
   - **8.6.3** ⏳ PRs link back to program days
 
@@ -220,9 +221,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 4.6 (User settings)
+**Last Completed Phase:** 8.5 (Multi-Day Program System - Core Complete)
 
-**Next Phase:** 5.1 (Firebase setup)
+**Next Phase:** 8.6 (History UI Integration) or 5.1 (Firebase setup)
 
 **Architecture:**
 
@@ -240,22 +241,38 @@ app/
 ├── _layout.tsx              # Root stack navigator
 ├── (tabs)/                  # Bottom tab navigator
 │   ├── _layout.tsx         # Tab configuration
-│   ├── index.tsx           # Home tab
+│   ├── index.tsx           # Home tab (with Active Program card)
 │   ├── history.tsx         # History tab
 │   ├── analytics.tsx       # Analytics tab
 │   └── settings.tsx        # Settings tab
 ├── home/                    # Home stack screens
 │   ├── template-list.tsx
 │   ├── template-builder.tsx
-│   ├── start-workout.tsx
+│   ├── start-workout.tsx    # Supports both templates & program days
 │   ├── active-workout.tsx
 │   ├── exercise-detail.tsx
 │   └── workout-summary.tsx
+├── programs/                # Program management screens (NEW)
+│   ├── _layout.tsx
+│   ├── program-list.tsx
+│   ├── program-builder.tsx
+│   ├── program-day-editor.tsx
+│   └── select-program-day.tsx
 └── rest-timer.tsx          # Modal screen
 
 src/
-├── features/               # Business logic
-├── lib/                    # Utilities and database
+├── features/
+│   ├── templates/          # Template system
+│   ├── workouts/           # Workout sessions
+│   └── programs/           # Multi-day programs (NEW)
+│       ├── api/            # programService.ts
+│       └── components/     # ProgramCard, ProgramDayCard, etc.
+├── lib/
+│   └── db/
+│       └── repositories/
+│           ├── templates.ts
+│           ├── sessions.ts
+│           └── programs.ts  # NEW
 └── stores/                 # Global state
 
 components/                 # Shared UI components (EXISTING)
