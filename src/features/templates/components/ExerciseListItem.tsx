@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ExerciseTemplate } from '@/types';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 export interface ExerciseListItemProps {
   exercise: Omit<ExerciseTemplate, 'id' | 'workoutTemplateId' | 'createdAt' | 'updatedAt'>;
@@ -29,6 +30,7 @@ export function ExerciseListItem({
 }: ExerciseListItemProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { displayWeight } = useWeightDisplay();
 
   const formatTargets = () => {
     const parts: string[] = [];
@@ -42,7 +44,7 @@ export function ExerciseListItem({
     }
 
     if (exercise.targetWeight) {
-      parts.push(`${exercise.targetWeight} lbs`);
+      parts.push(displayWeight(exercise.targetWeight));
     }
 
     return parts.length > 0 ? parts.join(' " ') : 'No targets set';

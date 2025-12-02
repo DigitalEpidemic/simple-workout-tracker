@@ -11,6 +11,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 export interface ProgressionDataPoint {
   date: number; // Unix timestamp
@@ -31,6 +32,7 @@ export function ExerciseProgressionChart({
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const screenWidth = Dimensions.get('window').width;
+  const { convertWeight, getUnit } = useWeightDisplay();
 
   const chartTitle = title ?? `${exerciseName} - Weight Progression`;
 
@@ -67,7 +69,8 @@ export function ExerciseProgressionChart({
   // Convert to arrays sorted by timestamp
   const groupedData = Object.values(dataByDate).sort((a, b) => a.timestamp - b.timestamp);
   const labels = groupedData.map((point) => point.dateKey);
-  const values = groupedData.map((point) => point.maxWeight);
+  // Convert weights from lbs (storage) to user's preferred unit for display
+  const values = groupedData.map((point) => convertWeight(point.maxWeight));
 
   const chartData = {
     labels: labels.length > 6 ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0) : labels,
@@ -105,7 +108,7 @@ export function ExerciseProgressionChart({
         }}
         bezier
         style={styles.chart}
-        yAxisSuffix=" lbs"
+        yAxisSuffix={` ${getUnit()}`}
       />
     </ThemedView>
   );

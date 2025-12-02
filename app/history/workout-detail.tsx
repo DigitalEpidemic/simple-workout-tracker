@@ -24,6 +24,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius } from '@/constants/theme';
 import { Button } from '@/components/ui/button';
 import { WorkoutSession, PRRecord } from '@/types';
@@ -37,6 +38,7 @@ export default function WorkoutDetailScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { convertWeight, displayWeight, getUnit, unit } = useWeightDisplay();
 
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -229,10 +231,10 @@ export default function WorkoutDetailScreen() {
 
           <View style={[styles.statCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {totalVolume.toLocaleString()}
+              {Math.round(convertWeight(totalVolume)).toLocaleString()}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Volume (lbs)
+              Volume ({getUnit()})
             </Text>
           </View>
         </View>
@@ -260,7 +262,7 @@ export default function WorkoutDetailScreen() {
                 >
                   <Ionicons name="trophy" size={20} color={colors.warning} />
                   <Text style={[styles.prText, { color: colors.text }]}>
-                    {formatPRDescription(pr)}
+                    {formatPRDescription(pr, unit)}
                   </Text>
                 </View>
               ))}
@@ -318,7 +320,7 @@ export default function WorkoutDetailScreen() {
                       key={set.id}
                       style={[styles.setDetail, { color: colors.textTertiary }]}
                     >
-                      {set.weight} lbs × {set.reps} {set.reps === 1 ? 'rep' : 'reps'}
+                      {displayWeight(set.weight)} × {set.reps} {set.reps === 1 ? 'rep' : 'reps'}
                     </Text>
                   ))}
                 </View>

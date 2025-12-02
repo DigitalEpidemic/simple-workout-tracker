@@ -22,6 +22,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 import {
   Colors,
   Spacing,
@@ -46,6 +47,7 @@ function WorkoutPerformanceCard({
   onPress: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { convertWeight, displayWeight, getUnit } = useWeightDisplay();
 
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
@@ -109,15 +111,15 @@ function WorkoutPerformanceCard({
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.text }]}>
-            {performance.maxWeight}
+            {Math.round(convertWeight(performance.maxWeight))}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            max lbs
+            max {getUnit()}
           </Text>
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.text }]}>
-            {performance.totalVolume.toLocaleString()}
+            {Math.round(convertWeight(performance.totalVolume)).toLocaleString()}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
             volume
@@ -154,10 +156,10 @@ function WorkoutPerformanceCard({
                 Set {index + 1}
               </Text>
               <Text style={[styles.setText, { color: colors.text }]}>
-                {set.weight} lbs × {set.reps} reps
+                {displayWeight(set.weight)} × {set.reps} reps
               </Text>
               <Text style={[styles.setVolume, { color: colors.textSecondary }]}>
-                {(set.weight * set.reps).toLocaleString()} lbs
+                {Math.round(convertWeight(set.weight * set.reps)).toLocaleString()} {getUnit()}
               </Text>
             </View>
           ))}
@@ -193,6 +195,8 @@ function StatisticsCard({
   statistics: any;
   colors: any;
 }) {
+  const { convertWeight, getUnit } = useWeightDisplay();
+
   const formatDate = (timestamp?: number): string => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -237,15 +241,15 @@ function StatisticsCard({
         </View>
         <View style={styles.gridItem}>
           <Text style={[styles.gridValue, { color: colors.text }]}>
-            {statistics.maxWeight}
+            {Math.round(convertWeight(statistics.maxWeight))}
           </Text>
           <Text style={[styles.gridLabel, { color: colors.textSecondary }]}>
-            Max Weight (lbs)
+            Max Weight ({getUnit()})
           </Text>
         </View>
         <View style={styles.gridItem}>
           <Text style={[styles.gridValue, { color: colors.text }]}>
-            {Math.round(statistics.avgVolume).toLocaleString()}
+            {Math.round(convertWeight(statistics.avgVolume)).toLocaleString()}
           </Text>
           <Text style={[styles.gridLabel, { color: colors.textSecondary }]}>
             Avg Volume

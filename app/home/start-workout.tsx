@@ -26,12 +26,14 @@ import { workoutStore } from '@/src/stores/workoutStore';
 import { Button } from '@/components/ui/button';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 export default function StartWorkoutScreen() {
   const router = useRouter();
   const { templateId } = useLocalSearchParams<{ templateId?: string }>();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { displayWeight } = useWeightDisplay();
 
   const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ export default function StartWorkoutScreen() {
                       )}
                       {exercise.targetWeight && (
                         <Text style={[styles.targetText, { color: colors.textSecondary }]}>
-                          @ {exercise.targetWeight} lbs
+                          @ {displayWeight(exercise.targetWeight)}
                         </Text>
                       )}
                     </View>

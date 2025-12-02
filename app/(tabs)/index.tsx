@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { fetchAllTemplates } from "@/src/features/templates/api/templateService";
 import { getCompletedSessions } from "@/src/lib/db/repositories/sessions";
 import { WorkoutTemplate } from "@/types";
@@ -20,6 +21,7 @@ import { WorkoutTemplate } from "@/types";
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const { convertWeight } = useWeightDisplay();
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
@@ -102,13 +104,16 @@ export default function HomeScreen() {
   }
 
   function formatVolume(volume: number): string {
-    if (volume >= 1000000) {
-      return `${(volume / 1000000).toFixed(1)}M`;
+    // Convert volume from lbs (storage) to user's preferred unit
+    const convertedVolume = Math.round(convertWeight(volume));
+
+    if (convertedVolume >= 1000000) {
+      return `${(convertedVolume / 1000000).toFixed(1)}M`;
     }
-    if (volume >= 1000) {
-      return `${(volume / 1000).toFixed(1)}K`;
+    if (convertedVolume >= 1000) {
+      return `${(convertedVolume / 1000).toFixed(1)}K`;
     }
-    return volume.toLocaleString();
+    return convertedVolume.toLocaleString();
   }
 
   return (

@@ -22,6 +22,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Spacing, Colors, FontSizes, FontWeights, BorderRadius } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { ExerciseProgressionChart } from "@/src/features/analytics/components/ExerciseProgressionChart";
 import { ExerciseSelector } from "@/src/features/analytics/components/ExerciseSelector";
 import { PRTimelineChart } from "@/src/features/analytics/components/PRTimelineChart";
@@ -95,6 +96,7 @@ export default function AnalyticsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
+  const { convertWeight, getUnit } = useWeightDisplay();
 
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [selectedExercise, setSelectedExercise] = useState<string>("");
@@ -210,8 +212,8 @@ export default function AnalyticsScreen() {
             <View style={styles.statCardWrapper}>
               <StatCard
                 label="Total Volume"
-                value={totalVolume.toLocaleString()}
-                subtitle="lbs"
+                value={Math.round(convertWeight(totalVolume)).toLocaleString()}
+                subtitle={getUnit()}
               />
             </View>
           </View>

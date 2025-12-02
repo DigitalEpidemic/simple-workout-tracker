@@ -10,6 +10,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 export interface VolumeDataPoint {
   date: number; // Unix timestamp
@@ -26,6 +27,7 @@ export function VolumeChart({ data, title = 'Volume Over Time', subtitle }: Volu
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const screenWidth = Dimensions.get('window').width;
+  const { convertWeight } = useWeightDisplay();
 
   // If no data, show empty state
   if (data.length === 0) {
@@ -46,7 +48,8 @@ export function VolumeChart({ data, title = 'Volume Over Time', subtitle }: Volu
     return `${date.getMonth() + 1}/${date.getDate()}`;
   });
 
-  const values = data.map((point) => point.totalVolume);
+  // Convert volume from lbs (storage) to user's preferred unit for display
+  const values = data.map((point) => Math.round(convertWeight(point.totalVolume)));
 
   const chartData = {
     labels: labels.length > 6 ? labels.filter((_, i) => i % Math.ceil(labels.length / 6) === 0) : labels,

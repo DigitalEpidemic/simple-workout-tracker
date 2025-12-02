@@ -20,6 +20,7 @@ import {
   Spacing,
 } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { useExercise } from "@/src/features/workouts/hooks/useExercise";
 import { WorkoutSet } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -65,8 +66,10 @@ function SetRow({
   hasMoreSets: boolean;
 }) {
   const swipeableRef = useRef<Swipeable>(null);
+  const { convertWeight, parseWeight, getUnit } = useWeightDisplay();
   const [reps, setReps] = useState(set.reps.toString());
-  const [weight, setWeight] = useState(set.weight.toString());
+  // Display weight in user's preferred unit
+  const [weight, setWeight] = useState(convertWeight(set.weight).toString());
 
   // Update local state when set prop changes, but only if the input is not being edited
   const [isEditingReps, setIsEditingReps] = useState(false);
@@ -80,9 +83,9 @@ function SetRow({
 
   React.useEffect(() => {
     if (!isEditingWeight) {
-      setWeight(set.weight.toString());
+      setWeight(convertWeight(set.weight).toString());
     }
-  }, [set.weight, isEditingWeight]);
+  }, [set.weight, isEditingWeight, convertWeight]);
 
   const handleRepsChange = (value: string) => {
     setReps(value);
@@ -115,10 +118,12 @@ function SetRow({
     setIsEditingWeight(false);
     const numValue = parseFloat(weight);
     if (!isNaN(numValue) && numValue >= 0) {
-      onUpdate(set.id, { weight: numValue });
+      // Convert user input to lbs for storage
+      const weightInLbs = parseWeight(numValue);
+      onUpdate(set.id, { weight: weightInLbs });
     } else {
       // Reset to previous value if invalid
-      setWeight(set.weight.toString());
+      setWeight(convertWeight(set.weight).toString());
     }
   };
 
@@ -191,7 +196,7 @@ function SetRow({
           <Text
             style={[styles.previousSetText, { color: colors.textTertiary }]}
           >
-            {previousSet ? `${previousSet.weight} × ${previousSet.reps}` : "—"}
+            {previousSet ? `${convertWeight(previousSet.weight)} × ${previousSet.reps}` : "—"}
           </Text>
         </View>
 
@@ -209,7 +214,7 @@ function SetRow({
             inputStyle={styles.centeredInput}
           />
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-            lbs
+            {getUnit()}
           </Text>
         </View>
 
@@ -263,6 +268,7 @@ export default function ExerciseDetailScreen() {
   }>();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { displayWeight } = useWeightDisplay();
 
   const {
     exercise,
@@ -395,7 +401,7 @@ export default function ExerciseDetailScreen() {
             <Text
               style={[styles.previousBest, { color: colors.textSecondary }]}
             >
-              Previous best: {bestPreviousSet.weight} lbs ×{" "}
+              Previous best: {displayWeight(bestPreviousSet.weight)} ×{" "}
               {bestPreviousSet.reps}
             </Text>
           )}

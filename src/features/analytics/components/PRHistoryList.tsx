@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius } from '@/constants/theme';
 import { PRRecord } from '@/types';
 import { getExerciseNamesWithPRs, getPRsByExerciseName } from '@/src/lib/db/repositories/pr-records';
@@ -35,6 +36,7 @@ interface PRHistoryListProps {
 export function PRHistoryList({ onExercisePress }: PRHistoryListProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { displayWeight } = useWeightDisplay();
 
   const [loading, setLoading] = useState(true);
   const [exercisePRs, setExercisePRs] = useState<ExercisePRGroup[]>([]);
@@ -198,7 +200,7 @@ export function PRHistoryList({ onExercisePress }: PRHistoryListProps) {
                           {pr.reps} {pr.reps === 1 ? 'rep' : 'reps'}
                         </Text>
                         <Text style={[styles.prWeight, { color: colors.text }]}>
-                          {pr.weight} lbs
+                          {displayWeight(pr.weight)}
                         </Text>
                       </View>
                       <Text style={[styles.prDate, { color: colors.textSecondary }]}>

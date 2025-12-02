@@ -35,6 +35,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 interface ExerciseForm {
   id?: string;
@@ -51,6 +52,7 @@ export default function TemplateBuilderScreen() {
   const { templateId } = useLocalSearchParams<{ templateId?: string }>();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { convertWeight, parseWeight, getUnit } = useWeightDisplay();
 
   const isEditing = !!templateId;
 
@@ -113,7 +115,8 @@ export default function TemplateBuilderScreen() {
     setExerciseFormName(exercise.name);
     setExerciseFormSets(exercise.targetSets?.toString() || '');
     setExerciseFormReps(exercise.targetReps?.toString() || '');
-    setExerciseFormWeight(exercise.targetWeight?.toString() || '');
+    // Convert weight from lbs (storage) to user's preferred unit for display
+    setExerciseFormWeight(exercise.targetWeight ? convertWeight(exercise.targetWeight).toString() : '');
     setExerciseFormNotes(exercise.notes || '');
     setShowExerciseModal(true);
   };
@@ -127,7 +130,8 @@ export default function TemplateBuilderScreen() {
 
     const sets = exerciseFormSets ? parseInt(exerciseFormSets, 10) : undefined;
     const reps = exerciseFormReps ? parseInt(exerciseFormReps, 10) : undefined;
-    const weight = exerciseFormWeight ? parseFloat(exerciseFormWeight) : undefined;
+    // Parse weight from user's unit back to lbs for storage
+    const weight = exerciseFormWeight ? parseWeight(parseFloat(exerciseFormWeight)) : undefined;
 
     const targetsError = validateExerciseTargets(sets, reps, weight);
     if (targetsError) {
@@ -330,7 +334,7 @@ export default function TemplateBuilderScreen() {
             </View>
 
             <Input
-              label="Target Weight (lbs)"
+              label={`Target Weight (${getUnit()})`}
               value={exerciseFormWeight}
               onChangeText={setExerciseFormWeight}
               placeholder="135"

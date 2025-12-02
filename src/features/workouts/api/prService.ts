@@ -12,6 +12,7 @@ import {
   getPRByExerciseAndReps,
 } from '@/src/lib/db/repositories/pr-records';
 import { getSessionById } from '@/src/lib/db/repositories/sessions';
+import { formatWeight } from '@/src/lib/utils/formatters';
 
 /**
  * Normalize exercise name for PR tracking
@@ -153,9 +154,11 @@ export function getDisplayName(normalizedName: string): string {
  * Format PR description for display
  *
  * @param pr - PR record
+ * @param weightUnit - User's preferred weight unit ('lbs' or 'kg')
  * @returns Formatted string like "Bench Press: 225 lbs x 5 reps"
  */
-export function formatPRDescription(pr: PRRecord): string {
+export function formatPRDescription(pr: PRRecord, weightUnit: 'lbs' | 'kg' = 'lbs'): string {
   const displayName = getDisplayName(pr.exerciseName);
-  return `${displayName}: ${pr.weight} lbs × ${pr.reps} ${pr.reps === 1 ? 'rep' : 'reps'}`;
+  const formattedWeight = formatWeight(pr.weight, weightUnit);
+  return `${displayName}: ${formattedWeight} × ${pr.reps} ${pr.reps === 1 ? 'rep' : 'reps'}`;
 }

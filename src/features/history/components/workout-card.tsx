@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing, FontSizes } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 import { WorkoutSummary } from '../api/historyService';
 
 export interface WorkoutCardProps {
@@ -54,19 +55,21 @@ function formatDate(timestamp: number): string {
   return date.toLocaleDateString('en-US', options);
 }
 
-/**
- * Format volume to a readable string with proper units
- *
- * @param volume - Total volume in lbs
- * @returns Formatted string like "1,234 lbs"
- */
-function formatVolume(volume: number): string {
-  return `${volume.toLocaleString()} lbs`;
-}
-
 export function WorkoutCard({ workout, onPress }: WorkoutCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { convertWeight, getUnit } = useWeightDisplay();
+
+  /**
+   * Format volume to a readable string with proper units
+   *
+   * @param volume - Total volume in lbs (storage format)
+   * @returns Formatted string like "1,234 lbs" or "612 kg"
+   */
+  const formatVolume = (volume: number): string => {
+    const converted = Math.round(convertWeight(volume));
+    return `${converted.toLocaleString()} ${getUnit()}`;
+  };
 
   return (
     <Pressable onPress={onPress}>
