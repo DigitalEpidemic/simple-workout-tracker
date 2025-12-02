@@ -22,6 +22,7 @@ import {
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { useExercise } from "@/src/features/workouts/hooks/useExercise";
+import { useDefaultRestTime } from "@/src/stores/settingsStore";
 import { WorkoutSet } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -269,6 +270,7 @@ export default function ExerciseDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { displayWeight } = useWeightDisplay();
+  const defaultRestTime = useDefaultRestTime();
 
   const {
     exercise,
@@ -293,10 +295,9 @@ export default function ExerciseDetailScreen() {
     // 1. Set is being marked as complete (not uncomplete)
     // 2. There are more incomplete sets remaining
     if (completed && hasMoreSets) {
-      // Default rest duration (90 seconds)
-      // TODO: Phase 4.6 - Make this configurable in user settings
-      const defaultRestDuration = 90;
-      router.push(`/rest-timer?duration=${defaultRestDuration}`);
+      // Use user's default rest time from settings (fallback to 90 seconds)
+      const restDuration = defaultRestTime ?? 90;
+      router.push(`/rest-timer?duration=${restDuration}`);
     }
   };
 
