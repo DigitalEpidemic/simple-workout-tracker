@@ -202,6 +202,13 @@ export default function WorkoutDetailScreen() {
           </Text>
         )}
 
+        {/* Program Day Name (if used) */}
+        {session.programDayName && (
+          <Text style={[styles.templateName, { color: colors.textSecondary }]}>
+            Program Day: {session.programDayName}
+          </Text>
+        )}
+
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
@@ -248,6 +255,11 @@ export default function WorkoutDetailScreen() {
                 Personal Records
               </Text>
             </View>
+            {session.programDayName && (
+              <Text style={[styles.prContext, { color: colors.textSecondary }]}>
+                Achieved during: {session.programDayName}
+              </Text>
+            )}
             <View style={styles.prList}>
               {prs.map((pr) => (
                 <View
@@ -469,6 +481,11 @@ const styles = StyleSheet.create({
   },
   prList: {
     gap: Spacing.sm,
+  },
+  prContext: {
+    fontSize: FontSizes.sm,
+    fontStyle: 'italic',
+    marginTop: -Spacing.xs,
   },
   prCard: {
     flexDirection: 'row',

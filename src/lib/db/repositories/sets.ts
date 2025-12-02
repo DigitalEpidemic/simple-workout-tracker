@@ -405,6 +405,9 @@ export interface ExerciseHistoryRow {
   totalVolume: number;
   maxWeight: number;
   totalReps: number;
+  programDayName?: string;
+  programId?: string;
+  programDayId?: string;
 }
 
 /**
@@ -429,6 +432,9 @@ export async function getExerciseHistory(
     total_volume: number;
     max_weight: number;
     total_reps: number;
+    program_day_name?: string;
+    program_id?: string;
+    program_day_id?: string;
   }>(
     `SELECT
       wss.id as workout_session_id,
@@ -439,7 +445,10 @@ export async function getExerciseHistory(
       SUM(CASE WHEN ws.completed = 1 THEN 1 ELSE 0 END) as completed_sets,
       SUM(CASE WHEN ws.completed = 1 THEN ws.reps * ws.weight ELSE 0 END) as total_volume,
       MAX(CASE WHEN ws.completed = 1 THEN ws.weight ELSE 0 END) as max_weight,
-      SUM(CASE WHEN ws.completed = 1 THEN ws.reps ELSE 0 END) as total_reps
+      SUM(CASE WHEN ws.completed = 1 THEN ws.reps ELSE 0 END) as total_reps,
+      wss.program_day_name,
+      wss.program_id,
+      wss.program_day_id
      FROM workout_sessions wss
      INNER JOIN exercises e ON e.workout_session_id = wss.id
      INNER JOIN workout_sets ws ON ws.exercise_id = e.id
@@ -459,6 +468,9 @@ export async function getExerciseHistory(
     totalVolume: row.total_volume ?? 0,
     maxWeight: row.max_weight ?? 0,
     totalReps: row.total_reps ?? 0,
+    programDayName: row.program_day_name ?? undefined,
+    programId: row.program_id ?? undefined,
+    programDayId: row.program_day_id ?? undefined,
   }));
 }
 

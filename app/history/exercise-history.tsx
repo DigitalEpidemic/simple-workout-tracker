@@ -87,6 +87,11 @@ function WorkoutPerformanceCard({
           <Text style={[styles.workoutName, { color: colors.text }]}>
             {performance.workoutName}
           </Text>
+          {performance.programDayName && (
+            <Text style={[styles.programDayName, { color: colors.primary }]}>
+              {performance.programDayName}
+            </Text>
+          )}
           <Text style={[styles.workoutDate, { color: colors.textSecondary }]}>
             {formatDate(performance.workoutDate)} at{' '}
             {formatTime(performance.workoutDate)}
@@ -489,6 +494,11 @@ const styles = StyleSheet.create({
   workoutName: {
     fontSize: FontSizes.base,
     fontWeight: FontWeights.semibold,
+  },
+  programDayName: {
+    fontSize: FontSizes.sm,
+    fontWeight: FontWeights.medium,
+    fontStyle: 'italic',
   },
   workoutDate: {
     fontSize: FontSizes.sm,

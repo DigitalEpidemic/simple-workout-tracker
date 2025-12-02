@@ -362,3 +362,79 @@ export async function getPRsByDateRange(
 
   return rows.map(rowToPRRecord);
 }
+
+/**
+ * Extended PR record with program context
+ */
+export interface PRRecordWithContext extends PRRecord {
+  programDayName?: string;
+  programId?: string;
+  programDayId?: string;
+}
+
+/**
+ * Get PR records with program context (if achieved during a program workout)
+ *
+ * @param exerciseName - Exercise name (normalized)
+ * @returns Promise that resolves to array of PRs with program context
+ */
+export async function getPRsWithContextByExerciseName(
+  exerciseName: string
+): Promise<PRRecordWithContext[]> {
+  interface PRWithContextRow extends PRRecordRow {
+    program_id?: string;
+    program_day_id?: string;
+    program_day_name?: string;
+  }
+
+  const rows = await query<PRWithContextRow>(
+    `SELECT
+      pr.*,
+      ws.program_id,
+      ws.program_day_id,
+      ws.program_day_name
+    FROM pr_records pr
+    LEFT JOIN workout_sessions ws ON pr.workout_session_id = ws.id
+    WHERE pr.exercise_name = ?
+    ORDER BY pr.reps ASC`,
+    [exerciseName]
+  );
+
+  return rows.map((row) => ({
+    ...rowToPRRecord(row),
+    programId: row.program_id ?? undefined,
+    programDayId: row.program_day_id ?? undefined,
+    programDayName: row.program_day_name ?? undefined,
+  }));
+}
+
+/**
+ * Get all PRs with program context
+ *
+ * @returns Promise that resolves to array of all PRs with program context
+ */
+export async function getAllPRsWithContext(): Promise<PRRecordWithContext[]> {
+  interface PRWithContextRow extends PRRecordRow {
+    program_id?: string;
+    program_day_id?: string;
+    program_day_name?: string;
+  }
+
+  const rows = await query<PRWithContextRow>(
+    `SELECT
+      pr.*,
+      ws.program_id,
+      ws.program_day_id,
+      ws.program_day_name
+    FROM pr_records pr
+    LEFT JOIN workout_sessions ws ON pr.workout_session_id = ws.id
+    ORDER BY pr.achieved_at DESC`
+  );
+
+  return rows.map((row) => ({
+    ...rowToPRRecord(row),
+    programId: row.program_id ?? undefined,
+    programDayId: row.program_day_id ?? undefined,
+    programDayName: row.program_day_name ?? undefined,
+  }));
+}

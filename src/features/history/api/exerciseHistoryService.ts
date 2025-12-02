@@ -25,6 +25,9 @@ export interface ExercisePerformance {
   maxWeight: number;
   totalReps: number;
   sets: WorkoutSet[];
+  programDayName?: string;
+  programId?: string;
+  programDayId?: string;
 }
 
 /**
@@ -62,6 +65,9 @@ export async function getExercisePerformanceHistory(
       maxWeight: row.maxWeight,
       totalReps: row.totalReps,
       sets: sets.filter((set) => set.completed),
+      programDayName: row.programDayName,
+      programId: row.programId,
+      programDayId: row.programDayId,
     });
   }
 
