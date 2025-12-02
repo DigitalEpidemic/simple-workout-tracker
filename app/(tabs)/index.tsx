@@ -119,7 +119,6 @@ export default function HomeScreen() {
           <ThemedText type="title">Workout Tracker</ThemedText>
           <ThemedText style={styles.subtitle}>Ready to train?</ThemedText>
         </ThemedView>
-
         {/* Lifetime Stats */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Lifetime Stats</ThemedText>
@@ -144,7 +143,6 @@ export default function HomeScreen() {
             </ThemedView>
           </ThemedView>
         </ThemedView>
-
         {/* Quick Actions */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Quick Start</ThemedText>
@@ -169,7 +167,6 @@ export default function HomeScreen() {
             </ThemedText>
           </Pressable>
         </ThemedView>
-
         {/* Recent Templates */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Recent Templates</ThemedText>
@@ -256,8 +253,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   section: {
-    padding: 20,
-    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    gap: 8,
   },
   actionButton: {
     flexDirection: "row",
@@ -283,7 +281,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "rgba(0, 122, 255, 0.1)",
     gap: 12,
-    marginBottom: 8,
   },
   templateInfo: {
     flex: 1,
