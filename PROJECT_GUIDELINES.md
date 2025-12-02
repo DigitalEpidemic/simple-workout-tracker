@@ -130,15 +130,15 @@ React Native workout tracking application built with TypeScript, following offli
 
 - **8.1** Data Model
 
-  - **8.1.1** ⏳ Create new SQLite tables: `programs`, `program_days`, `program_day_exercises`, `program_history`
-  - **8.1.2** ⏳ Migration scripts (create / alter / foreign keys)
-  - **8.1.3** ⏳ Add SQLite helper hooks for program execution + program history
+  - **8.1.1** ✅ Create new SQLite tables: `programs`, `program_days`, `program_day_exercises`, `program_history`
+  - **8.1.2** ✅ Migration scripts (create / alter / foreign keys)
+  - **8.1.3** ✅ Add SQLite helper hooks for program execution + program history
 
 - **8.2** Program Management Screens
 
-  - **8.2.1** ⏳ Program list + Create Program screen
-  - **8.2.2** ⏳ Program Day Editor (add/edit/remove days)
-  - **8.2.3** ⏳ Day Exercise Editor (add/edit/remove exercises for each program day)
+  - **8.2.1** ✅ Program list + Create Program screen
+  - **8.2.2** ✅ Program Day Editor (add/edit/remove days)
+  - **8.2.3** ✅ Day Exercise Editor (add/edit/remove exercises for each program day)
 
 - **8.3** Program Activation
 

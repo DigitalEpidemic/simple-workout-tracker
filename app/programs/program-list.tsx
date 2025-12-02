@@ -1,18 +1,22 @@
 /**
  * Program List Screen
  *
- * PLACEHOLDER: Shows all programs, allows create/edit/delete/activate
- * TODO: Implement full CRUD functionality
+ * Shows all programs, allows create/edit/delete/activate
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ProgramCard } from '@/src/features/programs/components/ProgramCard';
-import { fetchAllPrograms } from '@/src/features/programs/api/programService';
+import {
+  fetchAllPrograms,
+  removeProgram,
+  activateProgram,
+  fetchProgramById,
+} from '@/src/features/programs/api/programService';
 import { Program } from '@/types';
 
 export default function ProgramListScreen() {
@@ -20,15 +24,28 @@ export default function ProgramListScreen() {
   const [programs, setPrograms] = useState<(Omit<Program, 'days'> & { dayCount: number })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPrograms();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadPrograms();
+    }, [])
+  );
 
   async function loadPrograms() {
     try {
+      setLoading(true);
       const allPrograms = await fetchAllPrograms();
-      // TODO: Fetch day count for each program
-      const programsWithCount = allPrograms.map(p => ({ ...p, dayCount: 0 }));
+
+      // Fetch day count for each program
+      const programsWithCount = await Promise.all(
+        allPrograms.map(async (p) => {
+          const fullProgram = await fetchProgramById(p.id);
+          return {
+            ...p,
+            dayCount: fullProgram?.days.length ?? 0,
+          };
+        })
+      );
+
       setPrograms(programsWithCount);
     } catch (error) {
       console.error('Failed to load programs:', error);
@@ -39,8 +56,46 @@ export default function ProgramListScreen() {
   }
 
   function handleCreateProgram() {
-    // TODO: Navigate to program builder
-    Alert.alert('Coming Soon', 'Program creation will be implemented next');
+    router.push('/programs/program-builder');
+  }
+
+  function handleEditProgram(programId: string) {
+    router.push(`/programs/program-builder?id=${programId}`);
+  }
+
+  async function handleActivateProgram(programId: string) {
+    try {
+      await activateProgram(programId);
+      await loadPrograms();
+      Alert.alert('Success', 'Program activated');
+    } catch (error: any) {
+      console.error('Failed to activate program:', error);
+      Alert.alert('Error', error.message || 'Failed to activate program');
+    }
+  }
+
+  function handleDeleteProgram(programId: string, programName: string) {
+    Alert.alert(
+      'Delete Program',
+      `Are you sure you want to delete "${programName}"? This will also delete all program days and exercises.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeProgram(programId);
+              await loadPrograms();
+              Alert.alert('Success', 'Program deleted');
+            } catch (error) {
+              console.error('Failed to delete program:', error);
+              Alert.alert('Error', 'Failed to delete program');
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -61,22 +116,10 @@ export default function ProgramListScreen() {
               <ProgramCard
                 key={program.id}
                 program={program}
-                onPress={() => {
-                  // TODO: Navigate to program builder for editing
-                  Alert.alert('Coming Soon', 'Program editing will be implemented next');
-                }}
-                onActivate={() => {
-                  // TODO: Implement activation
-                  Alert.alert('Coming Soon', 'Program activation will be implemented next');
-                }}
-                onEdit={() => {
-                  // TODO: Navigate to program builder
-                  Alert.alert('Coming Soon', 'Program editing will be implemented next');
-                }}
-                onDelete={() => {
-                  // TODO: Implement delete with confirmation
-                  Alert.alert('Coming Soon', 'Program deletion will be implemented next');
-                }}
+                onPress={() => handleEditProgram(program.id)}
+                onActivate={() => handleActivateProgram(program.id)}
+                onEdit={() => handleEditProgram(program.id)}
+                onDelete={() => handleDeleteProgram(program.id, program.name)}
               />
             ))
           )}
