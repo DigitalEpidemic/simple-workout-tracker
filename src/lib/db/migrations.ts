@@ -13,7 +13,7 @@ import { ALL_TABLES, ALL_INDEXES } from './schema';
  * Current database version
  * Increment this when adding new migrations
  */
-export const CURRENT_DB_VERSION = 1;
+export const CURRENT_DB_VERSION = 2;
 
 /**
  * Migration function type
@@ -44,15 +44,116 @@ const migration1: Migration = async (db: SQLite.SQLiteDatabase) => {
 };
 
 /**
+ * Migration 2: Add program tables
+ * Creates tables for multi-day training programs
+ */
+const migration2: Migration = async (db: SQLite.SQLiteDatabase) => {
+  console.log('Running migration 2: Add program tables');
+
+  // Create programs table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS programs (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      is_active INTEGER NOT NULL DEFAULT 0,
+      current_day_index INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+  `);
+
+  // Create program_days table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS program_days (
+      id TEXT PRIMARY KEY NOT NULL,
+      program_id TEXT NOT NULL,
+      day_index INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Create program_day_exercises table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS program_day_exercises (
+      id TEXT PRIMARY KEY NOT NULL,
+      program_day_id TEXT NOT NULL,
+      exercise_name TEXT NOT NULL,
+      "order" INTEGER NOT NULL,
+      target_sets INTEGER,
+      target_reps INTEGER,
+      target_weight REAL,
+      rest_seconds INTEGER,
+      notes TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (program_day_id) REFERENCES program_days(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Create program_history table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS program_history (
+      id TEXT PRIMARY KEY NOT NULL,
+      program_id TEXT NOT NULL,
+      program_day_id TEXT NOT NULL,
+      workout_session_id TEXT NOT NULL,
+      performed_at INTEGER NOT NULL,
+      duration_seconds INTEGER,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
+      FOREIGN KEY (program_day_id) REFERENCES program_days(id) ON DELETE CASCADE,
+      FOREIGN KEY (workout_session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Add indexes
+  await db.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_program_days_program_id
+    ON program_days(program_id, day_index);
+  `);
+
+  await db.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_program_day_exercises_program_day_id
+    ON program_day_exercises(program_day_id);
+  `);
+
+  await db.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_program_history_program_id
+    ON program_history(program_id, performed_at DESC);
+  `);
+
+  await db.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_program_history_workout_session_id
+    ON program_history(workout_session_id);
+  `);
+
+  // Add program fields to workout_sessions table
+  await db.execAsync(`
+    ALTER TABLE workout_sessions ADD COLUMN program_id TEXT;
+  `);
+
+  await db.execAsync(`
+    ALTER TABLE workout_sessions ADD COLUMN program_day_id TEXT;
+  `);
+
+  await db.execAsync(`
+    ALTER TABLE workout_sessions ADD COLUMN program_day_name TEXT;
+  `);
+
+  console.log('Migration 2 complete');
+};
+
+/**
  * All migrations in order
  * Add new migrations to this array as needed
  */
 const migrations: Migration[] = [
   migration1,
-  // Future migrations go here:
-  // migration2,
-  // migration3,
-  // etc.
+  migration2,
 ];
 
 /**
@@ -136,6 +237,10 @@ export async function resetDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
   const tables = [
     'sync_queue',
     'user_settings',
+    'program_history',
+    'program_day_exercises',
+    'program_days',
+    'programs',
     'pr_records',
     'workout_sets',
     'exercises',

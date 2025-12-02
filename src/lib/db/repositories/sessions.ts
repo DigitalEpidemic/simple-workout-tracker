@@ -16,6 +16,9 @@ interface WorkoutSessionRow {
   id: string;
   template_id: string | null;
   template_name: string | null;
+  program_id: string | null;
+  program_day_id: string | null;
+  program_day_name: string | null;
   name: string;
   start_time: number;
   end_time: number | null;
@@ -46,6 +49,9 @@ function rowToWorkoutSession(
     id: row.id,
     templateId: row.template_id ?? undefined,
     templateName: row.template_name ?? undefined,
+    programId: row.program_id ?? undefined,
+    programDayId: row.program_day_id ?? undefined,
+    programDayName: row.program_day_name ?? undefined,
     name: row.name,
     exercises,
     startTime: row.start_time,
@@ -231,12 +237,15 @@ export async function createSession(
 ): Promise<void> {
   await execute(
     `INSERT INTO workout_sessions
-     (id, template_id, template_name, name, start_time, end_time, duration, notes, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     (id, template_id, template_name, program_id, program_day_id, program_day_name, name, start_time, end_time, duration, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       session.id,
       session.templateId ?? null,
       session.templateName ?? null,
+      session.programId ?? null,
+      session.programDayId ?? null,
+      session.programDayName ?? null,
       session.name,
       session.startTime,
       session.endTime ?? null,
@@ -303,6 +312,7 @@ export async function updateSession(
  * Complete a workout session
  *
  * Sets end_time and calculates duration.
+ * If session is from a program, logs program history and advances day.
  *
  * @param id - Session ID
  * @param endTime - End timestamp
@@ -323,6 +333,22 @@ export async function completeSession(
     'UPDATE workout_sessions SET end_time = ?, duration = ?, updated_at = ? WHERE id = ?',
     [endTime, duration, Date.now(), id]
   );
+
+  // If this is a program workout, log history and advance day
+  if (session.programId && session.programDayId) {
+    // Import here to avoid circular dependency
+    const { logProgramHistory, advanceProgramDay } = await import('./programs');
+
+    await logProgramHistory({
+      programId: session.programId,
+      programDayId: session.programDayId,
+      workoutSessionId: id,
+      performedAt: endTime,
+      durationSeconds: duration,
+    });
+
+    await advanceProgramDay(session.programId);
+  }
 }
 
 /**

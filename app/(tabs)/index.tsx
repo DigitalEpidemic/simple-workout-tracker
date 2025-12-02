@@ -171,6 +171,16 @@ export default function HomeScreen() {
               Choose Template
             </ThemedText>
           </Pressable>
+
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/programs/program-list")}
+          >
+            <IconSymbol size={24} name="calendar" color="#007AFF" />
+            <ThemedText style={styles.actionButtonText}>
+              Manage Programs
+            </ThemedText>
+          </Pressable>
         </ThemedView>
         {/* Recent Templates */}
         <ThemedView style={styles.section}>

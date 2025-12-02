@@ -70,6 +70,9 @@ export interface WorkoutSession {
   id: string;
   templateId?: string; // Optional - can start workout without template
   templateName?: string; // Snapshot of template name at session creation
+  programId?: string; // Optional - if started from a program
+  programDayId?: string; // Optional - which program day was performed
+  programDayName?: string; // Optional - snapshot of program day name
   name: string;
   exercises: Exercise[];
   startTime: number; // Unix timestamp - set when "Begin Workout" is pressed on Start Workout Flow screen
@@ -131,4 +134,62 @@ export interface VolumeDataPoint {
   totalVolume: number; // sum of (reps * weight)
   totalSets: number;
   totalReps: number;
+}
+
+/**
+ * Program day exercise definition
+ * Similar to ExerciseTemplate but for program days
+ */
+export interface ProgramDayExercise {
+  id: string;
+  programDayId: string;
+  exerciseName: string;
+  order: number;
+  targetSets?: number;
+  targetReps?: number;
+  targetWeight?: number;
+  restSeconds?: number;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Program day - a single day in a multi-day program
+ */
+export interface ProgramDay {
+  id: string;
+  programId: string;
+  dayIndex: number; // 0-based order in program (Day 0, Day 1, etc.)
+  name: string; // e.g., "Upper Body", "Lower Body"
+  exercises: ProgramDayExercise[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Multi-day training program
+ */
+export interface Program {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean; // Only one program can be active at a time
+  currentDayIndex: number; // Next day to perform (0-based)
+  days: ProgramDay[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Program history entry - tracks which program day was performed
+ */
+export interface ProgramHistoryEntry {
+  id: string;
+  programId: string;
+  programDayId: string;
+  workoutSessionId: string;
+  performedAt: number; // Unix timestamp
+  durationSeconds?: number;
+  createdAt: number;
 }

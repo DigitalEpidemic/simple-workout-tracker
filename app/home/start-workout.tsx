@@ -30,7 +30,11 @@ import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
 export default function StartWorkoutScreen() {
   const router = useRouter();
-  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
+  const { templateId, programId, programDayId } = useLocalSearchParams<{
+    templateId?: string;
+    programId?: string;
+    programDayId?: string;
+  }>();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { displayWeight } = useWeightDisplay();
@@ -38,9 +42,21 @@ export default function StartWorkoutScreen() {
   const [template, setTemplate] = useState<WorkoutTemplate | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // TODO Phase 8: Load program day if programDayId is provided
+  // When programDayId is provided:
+  // 1. Fetch program day exercises using getProgramDayById(programDayId)
+  // 2. Convert exercises to template format for display
+  // 3. Store programId, programDayId, programDayName in session on start
+
   useEffect(() => {
+    if (programDayId) {
+      // TODO: Load program day instead of template
+      console.log('TODO: Load program day', programDayId);
+      setLoading(false);
+      return;
+    }
     loadTemplate();
-  }, [templateId]);
+  }, [templateId, programDayId]);
 
   const loadTemplate = async () => {
     if (!templateId) {

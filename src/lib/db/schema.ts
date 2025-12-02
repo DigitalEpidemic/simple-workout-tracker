@@ -196,6 +196,102 @@ export const CREATE_SYNC_QUEUE_INDEX = `
 `;
 
 /**
+ * Programs table
+ * Stores multi-day training programs
+ */
+export const CREATE_PROGRAMS_TABLE = `
+  CREATE TABLE IF NOT EXISTS programs (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active INTEGER NOT NULL DEFAULT 0,
+    current_day_index INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+`;
+
+/**
+ * Program days table
+ * Stores individual days within a program
+ */
+export const CREATE_PROGRAM_DAYS_TABLE = `
+  CREATE TABLE IF NOT EXISTS program_days (
+    id TEXT PRIMARY KEY NOT NULL,
+    program_id TEXT NOT NULL,
+    day_index INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+  );
+`;
+
+/**
+ * Program day exercises table
+ * Stores exercises for each program day
+ */
+export const CREATE_PROGRAM_DAY_EXERCISES_TABLE = `
+  CREATE TABLE IF NOT EXISTS program_day_exercises (
+    id TEXT PRIMARY KEY NOT NULL,
+    program_day_id TEXT NOT NULL,
+    exercise_name TEXT NOT NULL,
+    "order" INTEGER NOT NULL,
+    target_sets INTEGER,
+    target_reps INTEGER,
+    target_weight REAL,
+    rest_seconds INTEGER,
+    notes TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (program_day_id) REFERENCES program_days(id) ON DELETE CASCADE
+  );
+`;
+
+/**
+ * Program history table
+ * Tracks which program day was performed and when
+ */
+export const CREATE_PROGRAM_HISTORY_TABLE = `
+  CREATE TABLE IF NOT EXISTS program_history (
+    id TEXT PRIMARY KEY NOT NULL,
+    program_id TEXT NOT NULL,
+    program_day_id TEXT NOT NULL,
+    workout_session_id TEXT NOT NULL,
+    performed_at INTEGER NOT NULL,
+    duration_seconds INTEGER,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
+    FOREIGN KEY (program_day_id) REFERENCES program_days(id) ON DELETE CASCADE,
+    FOREIGN KEY (workout_session_id) REFERENCES workout_sessions(id) ON DELETE CASCADE
+  );
+`;
+
+// Index for program_days by program_id and day_index
+export const CREATE_PROGRAM_DAYS_INDEX = `
+  CREATE INDEX IF NOT EXISTS idx_program_days_program_id
+  ON program_days(program_id, day_index);
+`;
+
+// Index for program_day_exercises by program_day_id
+export const CREATE_PROGRAM_DAY_EXERCISES_INDEX = `
+  CREATE INDEX IF NOT EXISTS idx_program_day_exercises_program_day_id
+  ON program_day_exercises(program_day_id);
+`;
+
+// Index for program_history by program_id and performed_at
+export const CREATE_PROGRAM_HISTORY_PROGRAM_INDEX = `
+  CREATE INDEX IF NOT EXISTS idx_program_history_program_id
+  ON program_history(program_id, performed_at DESC);
+`;
+
+// Index for program_history by workout_session_id
+export const CREATE_PROGRAM_HISTORY_SESSION_INDEX = `
+  CREATE INDEX IF NOT EXISTS idx_program_history_workout_session_id
+  ON program_history(workout_session_id);
+`;
+
+/**
  * All table creation statements in order
  */
 export const ALL_TABLES = [

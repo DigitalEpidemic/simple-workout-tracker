@@ -386,6 +386,12 @@ export default function ActiveWorkoutScreen() {
           <Text style={[styles.workoutName, { color: colors.text }]}>
             {session.name}
           </Text>
+          {/* TODO Phase 8: Display program context if present */}
+          {session.programDayName && (
+            <Text style={[styles.programBadge, { color: colors.textSecondary }]}>
+              {session.programDayName}
+            </Text>
+          )}
           <Text style={[styles.timer, { color: colors.primary }]}>
             {formattedTime}
           </Text>
@@ -537,6 +543,10 @@ const styles = StyleSheet.create({
   workoutName: {
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.semibold,
+  },
+  programBadge: {
+    fontSize: FontSizes.sm,
+    fontStyle: 'italic',
   },
   timer: {
     fontSize: FontSizes.xl,
