@@ -22,9 +22,10 @@ export interface PRDataPoint {
 interface PRTimelineChartProps {
   data: PRDataPoint[];
   title?: string;
+  subtitle?: string;
 }
 
-export function PRTimelineChart({ data, title = 'Personal Records Timeline' }: PRTimelineChartProps) {
+export function PRTimelineChart({ data, title = 'Personal Records', subtitle }: PRTimelineChartProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const screenWidth = Dimensions.get('window').width;
@@ -69,7 +70,7 @@ export function PRTimelineChart({ data, title = 'Personal Records Timeline' }: P
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>{title}</ThemedText>
       <ThemedText style={styles.subtitle}>
-        {data.length} total PR{data.length !== 1 ? 's' : ''} achieved
+        {subtitle || `${data.length} total PR${data.length !== 1 ? 's' : ''} achieved`}
       </ThemedText>
       <BarChart
         data={chartData}
@@ -105,8 +106,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   subtitle: {
     fontSize: 14,

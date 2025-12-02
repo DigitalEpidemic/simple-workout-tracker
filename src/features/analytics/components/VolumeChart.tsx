@@ -19,9 +19,10 @@ export interface VolumeDataPoint {
 interface VolumeChartProps {
   data: VolumeDataPoint[];
   title?: string;
+  subtitle?: string;
 }
 
-export function VolumeChart({ data, title = 'Volume Over Time' }: VolumeChartProps) {
+export function VolumeChart({ data, title = 'Volume Over Time', subtitle }: VolumeChartProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const screenWidth = Dimensions.get('window').width;
@@ -31,6 +32,7 @@ export function VolumeChart({ data, title = 'Volume Over Time' }: VolumeChartPro
     return (
       <ThemedView style={styles.container}>
         <ThemedText style={styles.title}>{title}</ThemedText>
+        {subtitle && <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>}
         <ThemedView style={styles.emptyState}>
           <ThemedText style={styles.emptyText}>No data available</ThemedText>
         </ThemedView>
@@ -58,6 +60,7 @@ export function VolumeChart({ data, title = 'Volume Over Time' }: VolumeChartPro
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>{title}</ThemedText>
+      {subtitle && <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>}
       <LineChart
         data={chartData}
         width={screenWidth - 40}
@@ -95,7 +98,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  subtitle: {
+    fontSize: 13,
+    opacity: 0.6,
     marginBottom: Spacing.md,
   },
   chart: {

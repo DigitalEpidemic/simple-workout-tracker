@@ -13,21 +13,16 @@
  * - Interactive charts with tooltips
  */
 
-import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  View,
-} from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { ExerciseProgressionChart } from "@/src/features/analytics/components/ExerciseProgressionChart";
+import { ExerciseSelector } from "@/src/features/analytics/components/ExerciseSelector";
 import { PRTimelineChart } from "@/src/features/analytics/components/PRTimelineChart";
+import { SectionHeader } from "@/src/features/analytics/components/SectionHeader";
 import { StatCard } from "@/src/features/analytics/components/StatCard";
 import {
   TimeRange,
@@ -94,9 +89,6 @@ function formatDuration(seconds: number): string {
 }
 
 export default function AnalyticsScreen() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
-
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [selectedExercise, setSelectedExercise] = useState<string>("");
   const [exerciseList, setExerciseList] = useState<string[]>([]);
@@ -194,7 +186,11 @@ export default function AnalyticsScreen() {
         {/* Time Range Selector */}
         <TimeRangeSelector selected={timeRange} onChange={setTimeRange} />
 
-        {/* Summary Stats */}
+        {/* Summary Stats Section */}
+        <SectionHeader
+          title="Summary"
+          subtitle="Stats for selected time range"
+        />
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
             <View style={styles.statCardWrapper}>
@@ -226,49 +222,37 @@ export default function AnalyticsScreen() {
           </View>
         </View>
 
-        {/* Volume Chart */}
-        <VolumeChart data={volumeData} />
+        {/* Volume Over Time Section */}
+        <VolumeChart
+          data={volumeData}
+          subtitle="Total weight lifted per workout"
+        />
 
-        {/* Exercise Selector */}
+        {/* PR Timeline Section */}
+        <PRTimelineChart data={prTimelineData} subtitle="Your PRs over time" />
+
+        {/* Exercise Progression Section */}
         {exerciseList.length > 0 && (
-          <ThemedView style={styles.pickerContainer}>
-            <ThemedText style={styles.pickerLabel}>Select Exercise:</ThemedText>
-            <View
-              style={[
-                styles.picker,
-                {
-                  backgroundColor: colors.backgroundSecondary,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Picker
-                selectedValue={selectedExercise}
-                onValueChange={(value: string) => setSelectedExercise(value)}
-                style={{ color: colors.text }}
-              >
-                {exerciseList.map((exercise) => (
-                  <Picker.Item
-                    key={exercise}
-                    label={exercise}
-                    value={exercise}
-                  />
-                ))}
-              </Picker>
+          <>
+            <SectionHeader
+              title="Exercise Progression"
+              subtitle="Track weight progression for a specific exercise"
+            />
+            <View style={styles.selectorContainer}>
+              <ExerciseSelector
+                exercises={exerciseList}
+                selectedExercise={selectedExercise}
+                onSelectExercise={setSelectedExercise}
+              />
             </View>
-          </ThemedView>
+            {selectedExercise && (
+              <ExerciseProgressionChart
+                data={progressionData}
+                exerciseName={selectedExercise}
+              />
+            )}
+          </>
         )}
-
-        {/* Exercise Progression Chart */}
-        {selectedExercise && (
-          <ExerciseProgressionChart
-            data={progressionData}
-            exerciseName={selectedExercise}
-          />
-        )}
-
-        {/* PR Timeline Chart */}
-        <PRTimelineChart data={prTimelineData} />
 
         {/* Empty state */}
         {!loading && totalWorkouts === 0 && (
@@ -310,19 +294,8 @@ const styles = StyleSheet.create({
   statCardWrapper: {
     flex: 1,
   },
-  pickerContainer: {
-    padding: Spacing.md,
-    marginTop: Spacing.md,
-  },
-  pickerLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: Spacing.sm,
-  },
-  picker: {
-    borderWidth: 1,
-    borderRadius: 8,
-    overflow: "hidden",
+  selectorContainer: {
+    paddingHorizontal: Spacing.md,
   },
   emptyState: {
     padding: Spacing.xl,
