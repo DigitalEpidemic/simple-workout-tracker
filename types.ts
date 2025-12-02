@@ -86,7 +86,7 @@ export interface WorkoutSession {
 export interface PRRecord {
   id: string;
   exerciseName: string; // Exercise name (normalized)
-  reps: number; // 1-12
+  reps: number; // Any positive integer (no longer limited to 1-12)
   weight: number;
   workoutSessionId: string;
   achievedAt: number; // Unix timestamp

@@ -95,7 +95,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **4.2** ✅ Calendar view
 - **4.3** ✅ Exercise history + previous set autofill
 - **4.4** ✅ Analytics charts
-- **4.5** ⏳ PR system
+- **4.5** ✅ PR system
 - **4.6** ⏳ User settings (weight unit toggle: lbs/kg, default rest timer)
 
 ### Phase 5 – Sync
@@ -158,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 4.4 (Analytics charts)
+**Last Completed Phase:** 4.5 (PR system)
 
-**Next Phase:** 4.5 (PR system)
+**Next Phase:** 4.6 (User settings)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory

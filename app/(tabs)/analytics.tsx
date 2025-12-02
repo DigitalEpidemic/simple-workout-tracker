@@ -14,11 +14,14 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Spacing } from "@/constants/theme";
+import { Spacing, Colors, FontSizes, FontWeights, BorderRadius } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ExerciseProgressionChart } from "@/src/features/analytics/components/ExerciseProgressionChart";
 import { ExerciseSelector } from "@/src/features/analytics/components/ExerciseSelector";
 import { PRTimelineChart } from "@/src/features/analytics/components/PRTimelineChart";
@@ -89,6 +92,10 @@ function formatDuration(seconds: number): string {
 }
 
 export default function AnalyticsScreen() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? "light"];
+
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const [selectedExercise, setSelectedExercise] = useState<string>("");
   const [exerciseList, setExerciseList] = useState<string[]>([]);
@@ -231,6 +238,34 @@ export default function AnalyticsScreen() {
         {/* PR Timeline Section */}
         <PRTimelineChart data={prTimelineData} subtitle="Your PRs over time" />
 
+        {/* View All PRs Button */}
+        {prCount > 0 && (
+          <View style={styles.viewAllContainer}>
+            <Pressable
+              onPress={() => router.push("/pr-history")}
+              style={[
+                styles.viewAllButton,
+                {
+                  backgroundColor: colors.primaryLight,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <Ionicons name="trophy" size={20} color={colors.primary} />
+              <ThemedText
+                style={[styles.viewAllText, { color: colors.primary }]}
+              >
+                View All Personal Records
+              </ThemedText>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.primary}
+              />
+            </Pressable>
+          </View>
+        )}
+
         {/* Exercise Progression Section */}
         {exerciseList.length > 0 && (
           <>
@@ -296,6 +331,24 @@ const styles = StyleSheet.create({
   },
   selectorContainer: {
     paddingHorizontal: Spacing.md,
+  },
+  viewAllContainer: {
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  viewAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    gap: Spacing.sm,
+  },
+  viewAllText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold,
   },
   emptyState: {
     padding: Spacing.xl,

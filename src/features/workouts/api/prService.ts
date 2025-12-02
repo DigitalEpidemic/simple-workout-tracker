@@ -75,8 +75,8 @@ async function detectPRsInExercise(
     const reps = set.reps;
     const weight = set.weight;
 
-    // Only track PRs for rep ranges 1-12
-    if (reps < 1 || reps > 12) {
+    // Track PRs for any positive rep count
+    if (reps < 1 || weight <= 0) {
       continue;
     }
 
