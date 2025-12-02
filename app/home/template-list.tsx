@@ -9,7 +9,7 @@
  * - Navigate to start workout from template
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -20,7 +20,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { WorkoutTemplate } from '@/types';
 import { fetchAllTemplates, removeTemplate } from '@/src/features/templates/api/templateService';
 import { TemplateCard } from '@/src/features/templates/components/TemplateCard';
@@ -50,9 +50,11 @@ export default function TemplateListScreen() {
     }
   };
 
-  useEffect(() => {
-    loadTemplates();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTemplates();
+    }, [])
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
