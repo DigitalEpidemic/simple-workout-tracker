@@ -96,7 +96,7 @@ React Native workout tracking application built with TypeScript, following offli
 - **4.3** ✅ Exercise history + previous set autofill
 - **4.4** ✅ Analytics charts
 - **4.5** ✅ PR system
-- **4.6** ⏳ User settings (weight unit toggle: lbs/kg, default rest timer)
+- **4.6** ✅ User settings (weight unit toggle: lbs/kg, default rest timer)
 
 ### Phase 5 – Sync
 - **5.1** ⏳ Firebase setup
@@ -141,7 +141,7 @@ For each phase implementation:
 - ❌ Do not use network-dependent features (except Phase 5)
 - ❌ Do not modify existing working boilerplate without reason
 - ❌ Do not create barrel files (index.ts/tsx for re-exports) - always import from named files directly
-- ❌ Do not use "kg" for weight units - use "lbs" until Phase 4.6 implements user settings
+- ❌ Do not hardcode weight units - use `useWeightDisplay()` hook to respect user preferences
 
 ---
 
@@ -158,9 +158,9 @@ For each phase implementation:
 
 ## Current Project Status
 
-**Last Completed Phase:** 4.5 (PR system)
+**Last Completed Phase:** 4.6 (User settings)
 
-**Next Phase:** 4.6 (User settings)
+**Next Phase:** 5.1 (Firebase setup)
 
 **Architecture:**
 - **Routing:** Expo Router (file-based routing) in `app/` directory
@@ -168,7 +168,7 @@ For each phase implementation:
 - **Shared Code:** `src/lib/` and `src/stores/`
 - **UI Components:** Top-level `components/` folder
 - **Theme System:** `constants/theme.ts` with design tokens and UI primitives in `components/ui/`
-- **Weight Units:** Currently hardcoded to **lbs** throughout the app until Phase 4.6 implements user settings for weight unit toggle
+- **Weight Units:** User can toggle between **lbs** and **kg** in Settings. All weights stored in lbs, converted on display. Use `useWeightDisplay()` hook for formatting.
 
 **Navigation Structure:**
 ```

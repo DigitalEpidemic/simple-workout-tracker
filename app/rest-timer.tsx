@@ -22,6 +22,7 @@ import {
   Spacing,
 } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useDefaultRestTime, useHapticsEnabled } from '@/src/stores/settingsStore';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -32,8 +33,10 @@ export default function RestTimerModal() {
   const { duration } = useLocalSearchParams<{ duration: string }>();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const defaultRestTime = useDefaultRestTime();
+  const hapticsEnabled = useHapticsEnabled();
 
-  const initialDuration = duration ? parseInt(duration, 10) : 90;
+  const initialDuration = duration ? parseInt(duration, 10) : (defaultRestTime ?? 90);
 
   const [timeRemaining, setTimeRemaining] = useState(initialDuration);
   const [isPaused, setIsPaused] = useState(false);
@@ -113,23 +116,25 @@ export default function RestTimerModal() {
 
     setHasCompleted(true);
 
-    // Haptic feedback
-    try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.log('Haptic feedback not available:', error);
-    }
+    // Haptic feedback (if enabled)
+    if (hapticsEnabled) {
+      try {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error) {
+        console.log('Haptic feedback not available:', error);
+      }
 
-    // Play completion sound (if available)
-    // Note: Sound file is optional - app will work with haptics only
-    try {
-      // Try to play completion beep (multiple attempts for better UX)
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      // Haptics not available - that's OK
-      console.log('Additional haptic feedback not available:', error);
+      // Play completion sound (if available)
+      // Note: Sound file is optional - app will work with haptics only
+      try {
+        // Try to play completion beep (multiple attempts for better UX)
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error) {
+        // Haptics not available - that's OK
+        console.log('Additional haptic feedback not available:', error);
+      }
     }
 
     // Auto-dismiss after 1 second
@@ -149,20 +154,24 @@ export default function RestTimerModal() {
     setTimeRemaining((prev) => Math.max(0, prev + seconds));
     timerEndTimeRef.current = Date.now() + Math.max(0, timeRemaining + seconds) * 1000;
 
-    // Light haptic feedback for button press
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (error) {
-      console.log('Haptic feedback not available:', error);
+    // Light haptic feedback for button press (if enabled)
+    if (hapticsEnabled) {
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } catch (error) {
+        console.log('Haptic feedback not available:', error);
+      }
     }
   };
 
   const handleSkip = async () => {
-    // Light haptic feedback for skip
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch (error) {
-      console.log('Haptic feedback not available:', error);
+    // Light haptic feedback for skip (if enabled)
+    if (hapticsEnabled) {
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (error) {
+        console.log('Haptic feedback not available:', error);
+      }
     }
 
     router.back();
@@ -180,11 +189,13 @@ export default function RestTimerModal() {
       timerEndTimeRef.current = Date.now() + timeRemaining * 1000;
     }
 
-    // Light haptic feedback
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (error) {
-      console.log('Haptic feedback not available:', error);
+    // Light haptic feedback (if enabled)
+    if (hapticsEnabled) {
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } catch (error) {
+        console.log('Haptic feedback not available:', error);
+      }
     }
   };
 
