@@ -262,12 +262,12 @@ export async function getTotalWorkoutCount(
   endDate: number,
   filter?: AnalyticsFilter
 ): Promise<number> {
-  const baseWhere = 'start_time >= ? AND start_time <= ? AND end_time IS NOT NULL';
+  const baseWhere = 'ws.start_time >= ? AND ws.start_time <= ? AND ws.end_time IS NOT NULL';
   const params: any[] = [startDate, endDate];
 
   let whereClause = baseWhere;
   if (filter) {
-    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter);
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'ws');
     if (filterClause) {
       whereClause = `${baseWhere} AND ${filterClause}`;
       params.push(...filterParams);
@@ -276,7 +276,7 @@ export async function getTotalWorkoutCount(
 
   const result = await getOne<{ count: number }>(
     `SELECT COUNT(*) as count
-     FROM workout_sessions
+     FROM workout_sessions ws
      WHERE ${whereClause}`,
     params
   );
@@ -333,12 +333,12 @@ export async function getAverageWorkoutDuration(
   endDate: number,
   filter?: AnalyticsFilter
 ): Promise<number> {
-  const baseWhere = 'start_time >= ? AND start_time <= ? AND end_time IS NOT NULL';
+  const baseWhere = 'ws.start_time >= ? AND ws.start_time <= ? AND ws.end_time IS NOT NULL';
   const params: any[] = [startDate, endDate];
 
   let whereClause = baseWhere;
   if (filter) {
-    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter);
+    const { whereClause: filterClause, params: filterParams } = buildFilterWhereClause(filter, 'ws');
     if (filterClause) {
       whereClause = `${baseWhere} AND ${filterClause}`;
       params.push(...filterParams);
@@ -347,7 +347,7 @@ export async function getAverageWorkoutDuration(
 
   const result = await getOne<{ avg_duration: number | null }>(
     `SELECT AVG(duration) as avg_duration
-     FROM workout_sessions
+     FROM workout_sessions ws
      WHERE ${whereClause}`,
     params
   );
