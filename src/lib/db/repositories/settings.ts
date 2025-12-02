@@ -155,6 +155,7 @@ export async function resetSettings(): Promise<UserSettings> {
  * - All workout templates
  * - All exercises and sets
  * - All PR records
+ * - All programs and program days
  * - Settings will be reset to defaults
  *
  * @returns Promise that resolves when deletion is complete
@@ -171,6 +172,10 @@ export async function deleteAllData(): Promise<void> {
     DELETE FROM exercise_templates;
     DELETE FROM workout_templates;
     DELETE FROM pr_records;
+    DELETE FROM program_day_exercises;
+    DELETE FROM program_days;
+    DELETE FROM program_history;
+    DELETE FROM programs;
     DELETE FROM sync_queue;
 
     COMMIT;

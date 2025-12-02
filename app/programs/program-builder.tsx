@@ -18,7 +18,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import {
   fetchProgramById,
   createNewProgram,
@@ -55,6 +55,17 @@ export default function ProgramBuilderScreen() {
     }
   }, [id]);
 
+  // Reload program data when screen comes into focus (e.g., after editing a day)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reload if we have a program ID (either from editing or newly created)
+      const idToLoad = isEditing ? id : programId;
+      if (idToLoad) {
+        loadProgram(idToLoad);
+      }
+    }, [isEditing, id, programId])
+  );
+
   const loadProgram = async (programId: string) => {
     try {
       const program = await fetchProgramById(programId);
@@ -71,10 +82,13 @@ export default function ProgramBuilderScreen() {
   };
 
   const handleAddDay = async () => {
-    if (!programId) {
+    let currentProgramId = programId;
+
+    if (!currentProgramId) {
       // If program doesn't exist yet, save it first
       const savedId = await handleSaveProgram(true);
       if (!savedId) return;
+      currentProgramId = savedId;
     }
 
     Alert.prompt(
@@ -91,7 +105,7 @@ export default function ProgramBuilderScreen() {
             }
 
             try {
-              const newDay = await addProgramDay(programId!, text.trim());
+              const newDay = await addProgramDay(currentProgramId!, text.trim());
               setDays([...days, newDay]);
             } catch (error) {
               console.error('Error adding day:', error);

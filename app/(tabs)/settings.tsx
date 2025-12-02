@@ -94,7 +94,7 @@ export default function SettingsScreen() {
   const handleResetAllData = () => {
     Alert.alert(
       'Reset All Data',
-      'Are you sure you want to delete all workout data? This action cannot be undone.\n\nThis will delete:\n• All workout sessions\n• All templates\n• All PR records\n• All exercise history',
+      'Are you sure you want to delete all workout data? This action cannot be undone.\n\nThis will delete:\n• All workout sessions\n• All templates\n• All programs\n• All PR records\n• All exercise history',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -317,7 +317,7 @@ export default function SettingsScreen() {
                 {isDeleting ? 'Deleting...' : 'Reset All Data'}
               </ThemedText>
               <ThemedText style={[styles.settingDescription, { color: colors.error }]}>
-                Delete all workouts, templates, and records
+                Delete all workouts, templates, programs, and records
               </ThemedText>
             </View>
           </Pressable>
