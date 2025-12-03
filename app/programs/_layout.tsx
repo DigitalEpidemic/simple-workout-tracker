@@ -34,7 +34,7 @@ export default function ProgramsLayout() {
         name="select-program-day"
         options={{
           title: 'Select Day',
-          headerShown: true,
+          headerShown: false,
           presentation: 'modal',
         }}
       />
