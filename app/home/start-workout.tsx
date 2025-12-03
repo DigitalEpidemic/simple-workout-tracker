@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
+import { consolidateSets } from '@/src/lib/utils/formatters';
 
 export default function StartWorkoutScreen() {
   const router = useRouter();
@@ -274,9 +275,12 @@ export default function StartWorkoutScreen() {
                     </Text>
                     {'sets' in exercise && exercise.sets && exercise.sets.length > 0 ? (
                       <View style={styles.individualSets}>
-                        {exercise.sets.map((set, setIndex) => (
-                          <Text key={setIndex} style={[styles.setDetail, { color: colors.textSecondary }]}>
-                            Set {set.setNumber}: {set.targetReps || 0} reps @ {set.targetWeight ? displayWeight(set.targetWeight) : '0 lbs'}
+                        {consolidateSets(
+                          exercise.sets,
+                          (weight) => displayWeight(weight)
+                        ).map((setDescription, idx) => (
+                          <Text key={idx} style={[styles.setDetail, { color: colors.textSecondary }]}>
+                            {setDescription}
                           </Text>
                         ))}
                       </View>

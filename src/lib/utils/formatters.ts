@@ -132,3 +132,55 @@ export function formatRelativeDate(timestamp: number): string {
 export function formatNumber(num: number): string {
   return num.toLocaleString('en-US');
 }
+
+/**
+ * Consolidate consecutive sets with the same reps and weight into a range format
+ *
+ * @param sets - Array of sets with targetReps and targetWeight
+ * @param formatWeight - Function to format weight value (e.g., "225 lbs" or "100 kg")
+ * @returns Array of consolidated set descriptions
+ *
+ * @example
+ * Input: [{targetReps: 10, targetWeight: 225}, {targetReps: 10, targetWeight: 225}, {targetReps: 10, targetWeight: 225}]
+ * Output: ["Set 1-3: 10 reps @ 225 lbs"]
+ *
+ * @example
+ * Input: [{targetReps: 10, targetWeight: 100}, {targetReps: 10, targetWeight: 100}, {targetReps: 8, targetWeight: 120}]
+ * Output: ["Set 1-2: 10 reps @ 100 lbs", "Set 3: 8 reps @ 120 lbs"]
+ */
+export function consolidateSets(
+  sets: Array<{ targetReps?: number; targetWeight?: number }>,
+  formatWeight: (weight: number) => string
+): string[] {
+  if (sets.length === 0) return [];
+
+  const consolidated: string[] = [];
+  let rangeStart = 0;
+
+  for (let i = 0; i < sets.length; i++) {
+    const currentSet = sets[i];
+    const nextSet = sets[i + 1];
+
+    // Check if we should continue the current range
+    const shouldContinueRange = nextSet &&
+      currentSet.targetReps === nextSet.targetReps &&
+      currentSet.targetWeight === nextSet.targetWeight;
+
+    if (!shouldContinueRange) {
+      // End of range - format and add to results
+      const setRange = rangeStart === i
+        ? `Set ${i + 1}`
+        : `Set ${rangeStart + 1}-${i + 1}`;
+
+      const reps = currentSet.targetReps ?? '?';
+      const weight = currentSet.targetWeight
+        ? formatWeight(currentSet.targetWeight)
+        : '?';
+
+      consolidated.push(`${setRange}: ${reps} reps @ ${weight}`);
+      rangeStart = i + 1;
+    }
+  }
+
+  return consolidated;
+}

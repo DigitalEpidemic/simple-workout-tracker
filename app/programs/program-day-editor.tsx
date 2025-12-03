@@ -36,6 +36,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
+import { consolidateSets } from '@/src/lib/utils/formatters';
 
 interface SetForm {
   id?: string;
@@ -320,9 +321,12 @@ export default function ProgramDayEditorScreen() {
                       {/* Show individual sets if they exist */}
                       {exercise.sets && exercise.sets.length > 0 ? (
                         <View style={styles.setsDisplay}>
-                          {exercise.sets.map((set, setIndex) => (
-                            <ThemedText key={setIndex} style={styles.exerciseTargets}>
-                              Set {setIndex + 1}: {set.targetReps || '?'} reps @ {set.targetWeight ? `${convertWeight(set.targetWeight)} ${getUnit()}` : '?'}
+                          {consolidateSets(
+                            exercise.sets,
+                            (weight) => `${convertWeight(weight)} ${getUnit()}`
+                          ).map((setDescription, idx) => (
+                            <ThemedText key={idx} style={styles.exerciseTargets}>
+                              {setDescription}
                             </ThemedText>
                           ))}
                         </View>
