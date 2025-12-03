@@ -157,6 +157,8 @@ const styles = StyleSheet.create({
   header: {
     padding: Spacing.lg,
     paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   headerTop: {
     flexDirection: 'row',

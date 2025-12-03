@@ -139,12 +139,12 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Header */}
+      <ThemedView style={styles.header}>
+        <ThemedText type="title">Workout Tracker</ThemedText>
+        <ThemedText style={styles.subtitle}>Ready to train?</ThemedText>
+      </ThemedView>
       <ScrollView style={styles.scrollView}>
-        {/* Header */}
-        <ThemedView style={styles.header}>
-          <ThemedText type="title">Workout Tracker</ThemedText>
-          <ThemedText style={styles.subtitle}>Ready to train?</ThemedText>
-        </ThemedView>
         {/* Lifetime Stats */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Lifetime Stats</ThemedText>
@@ -315,6 +315,8 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   subtitle: {
     fontSize: 16,
