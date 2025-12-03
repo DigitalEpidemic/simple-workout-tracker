@@ -20,14 +20,14 @@ export default function ProgramsLayout() {
         name="program-builder"
         options={{
           title: 'Edit Program',
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="program-day-editor"
         options={{
           title: 'Edit Day',
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen

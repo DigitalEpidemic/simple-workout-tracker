@@ -13,6 +13,7 @@ import {
   StyleSheet,
   ScrollView,
   View,
+  Text,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -185,6 +186,20 @@ export default function ProgramBuilderScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <View style={styles.headerContent}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+          </Pressable>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {isEditing ? 'Edit Program' : 'Create Program'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -260,6 +275,35 @@ export default function ProgramBuilderScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl + 40,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
+  backButtonText: {
+    fontSize: FontSizes['2xl'],
+    fontWeight: FontWeights.medium,
+  },
+  titleContainer: {
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: FontSizes.xl,
+    fontWeight: FontWeights.semibold,
   },
   keyboardView: {
     flex: 1,
