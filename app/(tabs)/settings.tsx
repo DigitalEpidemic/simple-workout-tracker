@@ -8,19 +8,26 @@
  * - Reset all data (with confirmation)
  */
 
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, View, Switch, Pressable, Alert } from 'react-native';
+import React, { useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useSettings } from '@/src/stores/settingsStore';
-import { deleteAllData } from '@/src/lib/db/repositories/settings';
-import { BorderRadius, Colors, Shadows, Spacing } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { BorderRadius, Colors, Shadows, Spacing } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { deleteAllData } from "@/src/lib/db/repositories/settings";
+import { useSettings } from "@/src/stores/settingsStore";
 
 export default function SettingsScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const {
     settings,
@@ -39,11 +46,73 @@ export default function SettingsScreen() {
   const handleWeightUnitToggle = async () => {
     if (!settings) return;
 
-    const newUnit = settings.weightUnit === 'lbs' ? 'kg' : 'lbs';
+    const newUnit = settings.weightUnit === "lbs" ? "kg" : "lbs";
     try {
       await updateWeightUnit(newUnit);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update weight unit');
+      Alert.alert("Error", "Failed to update weight unit");
+    }
+  };
+
+  /**
+   * Format seconds with appropriate unit
+   */
+  const formatRestTime = (seconds: number): string => {
+    const MINUTE = 60;
+    const HOUR = 3600;
+    const DAY = 86400;
+    const MONTH = 2592000; // 30 days
+    const YEAR = 31536000; // 365 days
+
+    if (seconds < MINUTE) {
+      return `${seconds} sec`;
+    } else if (seconds < HOUR) {
+      const mins = Math.floor(seconds / MINUTE);
+      const secs = seconds % MINUTE;
+      if (secs === 0) {
+        return `${mins} min`;
+      }
+      return `${mins} min ${secs} sec`;
+    } else if (seconds < DAY) {
+      const hours = Math.floor(seconds / HOUR);
+      const mins = Math.floor((seconds % HOUR) / MINUTE);
+      const secs = seconds % MINUTE;
+      if (mins === 0 && secs === 0) {
+        return `${hours} hr`;
+      } else if (secs === 0) {
+        return `${hours} hr ${mins} min`;
+      }
+      return `${hours} hr ${mins} min ${secs} sec`;
+    } else if (seconds < MONTH) {
+      const days = Math.floor(seconds / DAY);
+      const hours = Math.floor((seconds % DAY) / HOUR);
+      const mins = Math.floor((seconds % HOUR) / MINUTE);
+      if (hours === 0 && mins === 0) {
+        return `${days} day`;
+      } else if (mins === 0) {
+        return `${days} day ${hours} hr`;
+      }
+      return `${days} day ${hours} hr ${mins} min`;
+    } else if (seconds < YEAR) {
+      const months = Math.floor(seconds / MONTH);
+      const days = Math.floor((seconds % MONTH) / DAY);
+      const hours = Math.floor((seconds % DAY) / HOUR);
+      if (days === 0 && hours === 0) {
+        return `${months} mo`;
+      } else if (hours === 0) {
+        return `${months} mo ${days} day`;
+      }
+      return `${months} mo ${days} day ${hours} hr`;
+    } else {
+      const years = Math.floor(seconds / YEAR);
+      const months = Math.floor((seconds % YEAR) / MONTH);
+      const days = Math.floor((seconds % MONTH) / DAY);
+      if (months === 0 && days === 0) {
+        return `${years} yr`;
+      } else if (days === 0) {
+        return `${years} yr ${months} mo`;
+      }
+      return `${years} yr ${months} mo ${days} day`;
     }
   };
 
@@ -52,27 +121,27 @@ export default function SettingsScreen() {
    */
   const handleRestTimeChange = () => {
     Alert.prompt(
-      'Default Rest Time',
-      'Enter rest time in seconds:',
+      "Default Rest Time",
+      "Enter rest time in seconds:",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Save',
+          text: "Save",
           onPress: async (value?: string) => {
-            const newValue = parseInt(value || '90', 10);
-            if (isNaN(newValue) || newValue < 0 || newValue > 600) {
-              Alert.alert('Invalid Input', 'Please enter a value between 0 and 600 seconds.');
+            const newValue = parseInt(value || "90", 10);
+            if (isNaN(newValue) || newValue < 0) {
+              Alert.alert("Invalid Input", "Please enter a positive number.");
               return;
             }
             try {
               await updateDefaultRestTime(newValue);
             } catch (error) {
-              Alert.alert('Error', 'Failed to update rest time');
+              Alert.alert("Error", "Failed to update rest time");
             }
           },
         },
       ],
-      'plain-text',
+      "plain-text",
       settings?.defaultRestTime.toString()
     );
   };
@@ -84,7 +153,7 @@ export default function SettingsScreen() {
     try {
       await updateHapticsEnabled(enabled);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update haptics setting');
+      Alert.alert("Error", "Failed to update haptics setting");
     }
   };
 
@@ -93,59 +162,28 @@ export default function SettingsScreen() {
    */
   const handleResetAllData = () => {
     Alert.alert(
-      'Reset All Data',
-      'Are you sure you want to delete all workout data? This action cannot be undone.\n\nThis will delete:\n• All workout sessions\n• All templates\n• All programs\n• All PR records\n• All exercise history',
+      "Reset All Data",
+      "Are you sure you want to delete all workout data? This action cannot be undone.\n\nThis will delete:\n• All workout sessions\n• All templates\n• All programs\n• All PR records\n• All exercise history",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete All',
-          style: 'destructive',
+          text: "Delete All",
+          style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
             try {
               await deleteAllData();
               await refreshSettings();
-              Alert.alert('Success', 'All data has been deleted');
+              Alert.alert("Success", "All data has been deleted");
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete data');
-              console.error('Delete all data error:', error);
+              Alert.alert("Error", "Failed to delete data");
+              console.error("Delete all data error:", error);
             } finally {
               setIsDeleting(false);
             }
           },
         },
       ]
-    );
-  };
-
-  /**
-   * Render rest time options
-   */
-  const renderRestTimeOption = (seconds: number, label: string) => {
-    const isSelected = settings?.defaultRestTime === seconds;
-
-    return (
-      <Pressable
-        key={seconds}
-        style={[
-          styles.restTimeOption,
-          {
-            backgroundColor: isSelected ? colors.primary : colors.backgroundSecondary,
-            borderColor: isSelected ? colors.primary : colors.border,
-          },
-          Shadows.sm,
-        ]}
-        onPress={() => updateDefaultRestTime(seconds)}
-      >
-        <ThemedText
-          style={[
-            styles.restTimeLabel,
-            { color: isSelected ? '#FFFFFF' : colors.text },
-          ]}
-        >
-          {label}
-        </ThemedText>
-      </Pressable>
     );
   };
 
@@ -167,7 +205,9 @@ export default function SettingsScreen() {
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
           <ThemedText type="title">Settings</ThemedText>
-          <ThemedText style={styles.subtitle}>Customize your experience</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Customize your experience
+          </ThemedText>
         </ThemedView>
 
         {/* Workout Preferences */}
@@ -178,27 +218,38 @@ export default function SettingsScreen() {
           <ThemedView
             style={[
               styles.settingRow,
-              { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+              {
+                backgroundColor: colors.backgroundSecondary,
+                borderColor: colors.border,
+              },
               Shadows.sm,
             ]}
           >
             <View style={styles.settingInfo}>
               <ThemedText style={styles.settingLabel}>Weight Unit</ThemedText>
-              <ThemedText style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              <ThemedText
+                style={[
+                  styles.settingDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Display weights in pounds or kilograms
               </ThemedText>
             </View>
             <Pressable
               style={[
                 styles.unitToggle,
-                { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+                {
+                  backgroundColor: colors.primaryLight,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={handleWeightUnitToggle}
             >
               <View
                 style={[
                   styles.unitOption,
-                  settings?.weightUnit === 'lbs' && [
+                  settings?.weightUnit === "lbs" && [
                     styles.unitOptionActive,
                     { backgroundColor: colors.primary },
                   ],
@@ -208,7 +259,10 @@ export default function SettingsScreen() {
                   style={[
                     styles.unitText,
                     {
-                      color: settings?.weightUnit === 'lbs' ? '#FFFFFF' : colors.textSecondary,
+                      color:
+                        settings?.weightUnit === "lbs"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
                     },
                   ]}
                 >
@@ -218,7 +272,7 @@ export default function SettingsScreen() {
               <View
                 style={[
                   styles.unitOption,
-                  settings?.weightUnit === 'kg' && [
+                  settings?.weightUnit === "kg" && [
                     styles.unitOptionActive,
                     { backgroundColor: colors.primary },
                   ],
@@ -228,7 +282,10 @@ export default function SettingsScreen() {
                   style={[
                     styles.unitText,
                     {
-                      color: settings?.weightUnit === 'kg' ? '#FFFFFF' : colors.textSecondary,
+                      color:
+                        settings?.weightUnit === "kg"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
                     },
                   ]}
                 >
@@ -239,35 +296,40 @@ export default function SettingsScreen() {
           </ThemedView>
 
           {/* Default Rest Time */}
-          <ThemedView
+          <Pressable
             style={[
-              styles.settingColumn,
-              { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+              styles.settingRow,
+              {
+                backgroundColor: colors.backgroundSecondary,
+                borderColor: colors.border,
+              },
               Shadows.sm,
             ]}
+            onPress={handleRestTimeChange}
           >
             <View style={styles.settingInfo}>
-              <ThemedText style={styles.settingLabel}>Default Rest Time</ThemedText>
-              <ThemedText style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                Choose your preferred rest duration
+              <ThemedText style={styles.settingLabel}>
+                Default Rest Time
+              </ThemedText>
+              <ThemedText
+                style={[
+                  styles.settingDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Time between sets
               </ThemedText>
             </View>
-            <View style={styles.restTimeGrid}>
-              {renderRestTimeOption(30, '30s')}
-              {renderRestTimeOption(60, '1:00')}
-              {renderRestTimeOption(90, '1:30')}
-              {renderRestTimeOption(120, '2:00')}
-              {renderRestTimeOption(180, '3:00')}
-              {renderRestTimeOption(240, '4:00')}
+            <View style={styles.restTimeContainer}>
+              <ThemedText
+                style={[styles.restTimeText, { color: colors.primary }]}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {formatRestTime(settings?.defaultRestTime ?? 90)}
+              </ThemedText>
             </View>
-            <Pressable
-              style={[styles.customButton, { borderColor: colors.border }]}
-              onPress={handleRestTimeChange}
-            >
-              <IconSymbol size={20} name="pencil" color={colors.primary} />
-              <ThemedText style={{ color: colors.primary }}>Custom</ThemedText>
-            </Pressable>
-          </ThemedView>
+          </Pressable>
         </ThemedView>
 
         {/* App Preferences */}
@@ -278,13 +340,23 @@ export default function SettingsScreen() {
           <ThemedView
             style={[
               styles.settingRow,
-              { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+              {
+                backgroundColor: colors.backgroundSecondary,
+                borderColor: colors.border,
+              },
               Shadows.sm,
             ]}
           >
             <View style={styles.settingInfo}>
-              <ThemedText style={styles.settingLabel}>Haptic Feedback</ThemedText>
-              <ThemedText style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              <ThemedText style={styles.settingLabel}>
+                Haptic Feedback
+              </ThemedText>
+              <ThemedText
+                style={[
+                  styles.settingDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Vibrate on button presses and timer completion
               </ThemedText>
             </View>
@@ -313,10 +385,14 @@ export default function SettingsScreen() {
           >
             <IconSymbol size={24} name="trash" color={colors.error} />
             <View style={styles.settingInfo}>
-              <ThemedText style={[styles.settingLabel, { color: colors.error }]}>
-                {isDeleting ? 'Deleting...' : 'Reset All Data'}
+              <ThemedText
+                style={[styles.settingLabel, { color: colors.error }]}
+              >
+                {isDeleting ? "Deleting..." : "Reset All Data"}
               </ThemedText>
-              <ThemedText style={[styles.settingDescription, { color: colors.error }]}>
+              <ThemedText
+                style={[styles.settingDescription, { color: colors.error }]}
+              >
                 Delete all workouts, templates, programs, and records
               </ThemedText>
             </View>
@@ -329,13 +405,21 @@ export default function SettingsScreen() {
           <ThemedView
             style={[
               styles.settingRow,
-              { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+              {
+                backgroundColor: colors.backgroundSecondary,
+                borderColor: colors.border,
+              },
               Shadows.sm,
             ]}
           >
             <View style={styles.settingInfo}>
               <ThemedText style={styles.settingLabel}>Version</ThemedText>
-              <ThemedText style={[styles.settingDescription, { color: colors.textSecondary }]}>
+              <ThemedText
+                style={[
+                  styles.settingDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 1.0.0
               </ThemedText>
             </View>
@@ -367,17 +451,17 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   section: {
     padding: Spacing.lg,
     gap: Spacing.md,
   },
   settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
@@ -389,11 +473,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   settingInfo: {
-    flex: 1,
+    flexShrink: 1,
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   settingDescription: {
     fontSize: 14,
@@ -401,53 +485,38 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   unitToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: BorderRadius.md,
     borderWidth: 2,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   unitOption: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     minWidth: 50,
-    alignItems: 'center',
+    alignItems: "center",
   },
   unitOptionActive: {
     // backgroundColor set dynamically
   },
   unitText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
-  restTimeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
+  restTimeContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    maxWidth: 150,
   },
-  restTimeOption: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  restTimeLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  customButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    gap: Spacing.sm,
+  restTimeText: {
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "right",
   },
   dangerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
