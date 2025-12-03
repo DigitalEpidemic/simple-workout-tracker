@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Exercise, WorkoutSet } from '@/types';
-import { getExerciseById } from '@/src/lib/db/repositories/sessions';
+import { getExerciseById, getSessionById } from '@/src/lib/db/repositories/sessions';
 import {
   createSet,
   updateSet,
@@ -35,7 +35,12 @@ export function useExercise(exerciseId: string) {
 
       // Load previous workout sets for autofill
       if (data) {
-        const prevSets = await getLastWorkoutSetsByExerciseName(data.name);
+        // Get the workout session to check if this is from a program
+        const session = await getSessionById(data.workoutSessionId, false);
+        const programDayId = session?.programDayId;
+
+        // If this workout is from a program day, only compare to previous workouts from the same program day
+        const prevSets = await getLastWorkoutSetsByExerciseName(data.name, programDayId);
         setPreviousSets(prevSets);
       }
     } catch (err) {

@@ -290,21 +290,33 @@ export async function getRecentSetsByExerciseName(
  * Returns all sets from the most recent completed workout containing this exercise.
  *
  * @param exerciseName - Exercise name
+ * @param programDayId - Optional program day ID to filter by specific program day
  * @returns Promise that resolves to array of sets from the last workout
  */
 export async function getLastWorkoutSetsByExerciseName(
-  exerciseName: string
+  exerciseName: string,
+  programDayId?: string
 ): Promise<WorkoutSet[]> {
   // First, find the most recent completed workout session with this exercise
-  const lastSessionRow = await getOne<{ workout_session_id: string }>(
-    `SELECT DISTINCT ws.workout_session_id
+  // If programDayId is provided, only look for workouts from that specific program day
+  let sqlQuery = `SELECT DISTINCT ws.workout_session_id
      FROM workout_sets ws
      INNER JOIN exercises e ON ws.exercise_id = e.id
      INNER JOIN workout_sessions wss ON ws.workout_session_id = wss.id
-     WHERE e.name = ? AND wss.end_time IS NOT NULL
-     ORDER BY wss.start_time DESC
-     LIMIT 1`,
-    [exerciseName]
+     WHERE e.name = ? AND wss.end_time IS NOT NULL`;
+
+  const params: any[] = [exerciseName];
+
+  if (programDayId) {
+    sqlQuery += ` AND wss.program_day_id = ?`;
+    params.push(programDayId);
+  }
+
+  sqlQuery += ` ORDER BY wss.start_time DESC LIMIT 1`;
+
+  const lastSessionRow = await getOne<{ workout_session_id: string }>(
+    sqlQuery,
+    params
   );
 
   if (!lastSessionRow) {
