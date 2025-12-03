@@ -214,6 +214,7 @@ export default function StartWorkoutScreen() {
         targetSets: ex.targetSets,
         targetReps: ex.targetReps,
         targetWeight: ex.targetWeight,
+        sets: ex.sets,
         notes: ex.notes,
       }))
     : template?.exercises || [];
@@ -271,23 +272,33 @@ export default function StartWorkoutScreen() {
                     <Text style={[styles.exerciseName, { color: colors.text }]}>
                       {exercise.name}
                     </Text>
-                    <View style={styles.exerciseTargets}>
-                      {exercise.targetSets && (
-                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
-                          {exercise.targetSets} sets
-                        </Text>
-                      )}
-                      {exercise.targetReps && (
-                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
-                          × {exercise.targetReps} reps
-                        </Text>
-                      )}
-                      {exercise.targetWeight && (
-                        <Text style={[styles.targetText, { color: colors.textSecondary }]}>
-                          @ {displayWeight(exercise.targetWeight)}
-                        </Text>
-                      )}
-                    </View>
+                    {'sets' in exercise && exercise.sets && exercise.sets.length > 0 ? (
+                      <View style={styles.individualSets}>
+                        {exercise.sets.map((set, setIndex) => (
+                          <Text key={setIndex} style={[styles.setDetail, { color: colors.textSecondary }]}>
+                            Set {set.setNumber}: {set.targetReps || 0} reps @ {set.targetWeight ? displayWeight(set.targetWeight) : '0 lbs'}
+                          </Text>
+                        ))}
+                      </View>
+                    ) : (
+                      <View style={styles.exerciseTargets}>
+                        {exercise.targetSets && (
+                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                            {exercise.targetSets} sets
+                          </Text>
+                        )}
+                        {exercise.targetReps && (
+                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                            × {exercise.targetReps} reps
+                          </Text>
+                        )}
+                        {exercise.targetWeight && (
+                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                            @ {displayWeight(exercise.targetWeight)}
+                          </Text>
+                        )}
+                      </View>
+                    )}
                   </View>
                 </View>
                 {exercise.notes && (
@@ -427,6 +438,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   targetText: {
+    fontSize: FontSizes.sm,
+  },
+  individualSets: {
+    gap: Spacing.xs / 2,
+    marginTop: Spacing.xs,
+  },
+  setDetail: {
     fontSize: FontSizes.sm,
   },
   exerciseNotes: {
