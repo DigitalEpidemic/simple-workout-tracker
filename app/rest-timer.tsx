@@ -107,8 +107,8 @@ export default function RestTimerModal() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Helper to schedule completion notification
-  const scheduleCompletionNotification = async (seconds: number) => {
+  // Helper to schedule/show completion notification
+  const scheduleCompletionNotification = async (seconds: number | null) => {
     const completionNotificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: "Rest Complete! 💪",
@@ -120,11 +120,11 @@ export default function RestTimerModal() {
         badge: 1,
         sticky: false,
       },
-      trigger: {
+      trigger: seconds !== null ? {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: seconds,
         repeats: false,
-      },
+      } : null, // null = show immediately
       identifier: "rest-timer-notification",
     });
     completionNotificationIdRef.current = completionNotificationId;
@@ -290,9 +290,39 @@ export default function RestTimerModal() {
   };
 
   const handleAddTime = async (seconds: number) => {
-    setTimeRemaining((prev) => Math.max(0, prev + seconds));
-    timerEndTimeRef.current =
-      Date.now() + Math.max(0, timeRemaining + seconds) * 1000;
+    const newTime = Math.max(0, timeRemaining + seconds);
+    setTimeRemaining(newTime);
+    timerEndTimeRef.current = Date.now() + newTime * 1000;
+
+    // If time goes to 0 or negative, complete immediately with notification
+    if (newTime <= 0) {
+      try {
+        // Cancel scheduled notification
+        if (completionNotificationIdRef.current) {
+          await Notifications.cancelScheduledNotificationAsync(
+            completionNotificationIdRef.current
+          );
+        }
+        // Show completion notification immediately (null = no delay)
+        await scheduleCompletionNotification(null);
+      } catch (error) {
+        console.log("Error showing completion notification:", error);
+      }
+      handleTimerComplete();
+      return;
+    }
+
+    // Reschedule completion notification with new time
+    try {
+      if (completionNotificationIdRef.current) {
+        await Notifications.cancelScheduledNotificationAsync(
+          completionNotificationIdRef.current
+        );
+      }
+      await scheduleCompletionNotification(newTime);
+    } catch (error) {
+      console.log("Error rescheduling completion notification:", error);
+    }
 
     // Light haptic feedback for button press (if enabled)
     if (hapticsEnabled) {
