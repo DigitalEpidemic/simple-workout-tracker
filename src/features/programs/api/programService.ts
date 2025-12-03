@@ -5,7 +5,7 @@
  * Handles validation and orchestration of program operations.
  */
 
-import { Program, ProgramDay, ProgramDayExercise } from '@/types';
+import { Program, ProgramDay, ProgramDayExercise, ProgramDayExerciseSet } from '@/types';
 import * as programRepo from '@/src/lib/db/repositories/programs';
 import { generateId } from '@/src/lib/utils/id';
 
@@ -245,18 +245,20 @@ export async function addProgramDayExercise(
     targetSets?: number;
     targetReps?: number;
     targetWeight?: number;
+    sets?: Array<{ targetReps?: number; targetWeight?: number }>;
     restSeconds?: number;
     notes?: string;
   }
 ): Promise<ProgramDayExercise> {
   const now = Date.now();
+  const exerciseId = generateId();
 
   // Get existing exercises to determine order
   const existingExercises = await programRepo.getProgramDayExercisesByDayId(dayId);
   const order = existingExercises.length;
 
   const exercise: ProgramDayExercise = {
-    id: generateId(),
+    id: exerciseId,
     programDayId: dayId,
     exerciseName: exerciseData.exerciseName,
     order,
@@ -271,6 +273,25 @@ export async function addProgramDayExercise(
 
   await programRepo.createProgramDayExercise(exercise);
 
+  // Create individual sets if provided
+  if (exerciseData.sets && exerciseData.sets.length > 0) {
+    const sets: ProgramDayExerciseSet[] = exerciseData.sets.map((setData, index) => ({
+      id: generateId(),
+      programDayExerciseId: exerciseId,
+      setNumber: index + 1,
+      targetReps: setData.targetReps,
+      targetWeight: setData.targetWeight,
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    for (const set of sets) {
+      await programRepo.createProgramDayExerciseSet(set);
+    }
+
+    exercise.sets = sets;
+  }
+
   return exercise;
 }
 
@@ -284,7 +305,36 @@ export async function updateProgramDayExercise(
   exerciseId: string,
   updates: Partial<Omit<ProgramDayExercise, 'id' | 'programDayId' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
-  await programRepo.updateProgramDayExercise(exerciseId, updates);
+  const now = Date.now();
+
+  // Handle sets update
+  if (updates.sets !== undefined) {
+    // Delete existing sets
+    await programRepo.deleteProgramDayExerciseSets(exerciseId);
+
+    // Create new sets if provided
+    if (updates.sets && updates.sets.length > 0) {
+      for (let i = 0; i < updates.sets.length; i++) {
+        const setData = updates.sets[i];
+        const set: ProgramDayExerciseSet = {
+          id: setData.id || generateId(),
+          programDayExerciseId: exerciseId,
+          setNumber: i + 1,
+          targetReps: setData.targetReps,
+          targetWeight: setData.targetWeight,
+          createdAt: setData.createdAt || now,
+          updatedAt: now,
+        };
+        await programRepo.createProgramDayExerciseSet(set);
+      }
+    }
+
+    // Remove sets from updates to avoid trying to update it in the exercise table
+    const { sets, ...exerciseUpdates } = updates;
+    await programRepo.updateProgramDayExercise(exerciseId, exerciseUpdates);
+  } else {
+    await programRepo.updateProgramDayExercise(exerciseId, updates);
+  }
 }
 
 /**

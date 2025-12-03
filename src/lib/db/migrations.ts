@@ -13,7 +13,7 @@ import { ALL_TABLES, ALL_INDEXES } from './schema';
  * Current database version
  * Increment this when adding new migrations
  */
-export const CURRENT_DB_VERSION = 2;
+export const CURRENT_DB_VERSION = 3;
 
 /**
  * Migration function type
@@ -148,12 +148,43 @@ const migration2: Migration = async (db: SQLite.SQLiteDatabase) => {
 };
 
 /**
+ * Migration 3: Add program day exercise sets table
+ * Allows individual set configurations for program exercises
+ */
+const migration3: Migration = async (db: SQLite.SQLiteDatabase) => {
+  console.log('Running migration 3: Add program day exercise sets table');
+
+  // Create program_day_exercise_sets table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS program_day_exercise_sets (
+      id TEXT PRIMARY KEY NOT NULL,
+      program_day_exercise_id TEXT NOT NULL,
+      set_number INTEGER NOT NULL,
+      target_reps INTEGER,
+      target_weight REAL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (program_day_exercise_id) REFERENCES program_day_exercises(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Add index for program_day_exercise_sets
+  await db.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_program_day_exercise_sets_program_day_exercise_id
+    ON program_day_exercise_sets(program_day_exercise_id);
+  `);
+
+  console.log('Migration 3 complete');
+};
+
+/**
  * All migrations in order
  * Add new migrations to this array as needed
  */
 const migrations: Migration[] = [
   migration1,
   migration2,
+  migration3,
 ];
 
 /**
@@ -238,6 +269,7 @@ export async function resetDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
     'sync_queue',
     'user_settings',
     'program_history',
+    'program_day_exercise_sets',
     'program_day_exercises',
     'program_days',
     'programs',

@@ -114,19 +114,35 @@ export default function StartWorkoutScreen() {
         // Create exercise instances from program day exercises with sets
         const exercises = programDay.exercises.map((ex, index) => {
           const exerciseId = generateId();
-          const numSets = ex.targetSets ?? 0;
 
           // Create sets based on program template
-          const sets = Array.from({ length: numSets }, (_, setIndex) => ({
-            id: generateId(),
-            exerciseId,
-            workoutSessionId: sessionId,
-            setNumber: setIndex + 1,
-            reps: ex.targetReps ?? 0,
-            weight: ex.targetWeight ?? 0,
-            completed: false,
-            createdAt: now,
-          }));
+          let sets;
+          if (ex.sets && ex.sets.length > 0) {
+            // Use individual set configurations
+            sets = ex.sets.map((setConfig, setIndex) => ({
+              id: generateId(),
+              exerciseId,
+              workoutSessionId: sessionId,
+              setNumber: setIndex + 1,
+              reps: setConfig.targetReps ?? 0,
+              weight: setConfig.targetWeight ?? 0,
+              completed: false,
+              createdAt: now,
+            }));
+          } else {
+            // Fallback to legacy uniform sets
+            const numSets = ex.targetSets ?? 0;
+            sets = Array.from({ length: numSets }, (_, setIndex) => ({
+              id: generateId(),
+              exerciseId,
+              workoutSessionId: sessionId,
+              setNumber: setIndex + 1,
+              reps: ex.targetReps ?? 0,
+              weight: ex.targetWeight ?? 0,
+              completed: false,
+              createdAt: now,
+            }));
+          }
 
           return {
             id: exerciseId,

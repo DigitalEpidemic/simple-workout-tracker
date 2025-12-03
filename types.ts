@@ -137,17 +137,34 @@ export interface VolumeDataPoint {
 }
 
 /**
+ * Individual set configuration for a program day exercise
+ */
+export interface ProgramDayExerciseSet {
+  id: string;
+  programDayExerciseId: string;
+  setNumber: number; // 1, 2, 3, etc.
+  targetReps?: number;
+  targetWeight?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
  * Program day exercise definition
  * Similar to ExerciseTemplate but for program days
+ * Can have either uniform sets (using targetSets/targetReps/targetWeight) or individual sets
  */
 export interface ProgramDayExercise {
   id: string;
   programDayId: string;
   exerciseName: string;
   order: number;
+  // Legacy uniform set configuration (kept for backward compatibility)
   targetSets?: number;
   targetReps?: number;
   targetWeight?: number;
+  // New individual set configurations
+  sets?: ProgramDayExerciseSet[];
   restSeconds?: number;
   notes?: string;
   createdAt: number;

@@ -8,6 +8,7 @@ import {
   Program,
   ProgramDay,
   ProgramDayExercise,
+  ProgramDayExerciseSet,
   ProgramHistoryEntry,
 } from '@/types';
 import { execute, getAll, getOne, transaction } from '../helpers';
@@ -48,6 +49,16 @@ interface ProgramDayExerciseRow {
   updated_at: number;
 }
 
+interface ProgramDayExerciseSetRow {
+  id: string;
+  program_day_exercise_id: string;
+  set_number: number;
+  target_reps: number | null;
+  target_weight: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
 interface ProgramHistoryRow {
   id: string;
   program_id: string;
@@ -59,7 +70,7 @@ interface ProgramHistoryRow {
 }
 
 /**
- * Convert database row to Program object
+ * Convert database row to Program object (without days)
  */
 function mapRowToProgram(row: ProgramRow): Omit<Program, 'days'> {
   return {
@@ -68,14 +79,13 @@ function mapRowToProgram(row: ProgramRow): Omit<Program, 'days'> {
     description: row.description ?? undefined,
     isActive: row.is_active === 1,
     currentDayIndex: row.current_day_index,
-    days: [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
+  } as Omit<Program, 'days'>;
 }
 
 /**
- * Convert database row to ProgramDay object
+ * Convert database row to ProgramDay object (without exercises)
  */
 function mapRowToProgramDay(row: ProgramDayRow): Omit<ProgramDay, 'exercises'> {
   return {
@@ -83,18 +93,34 @@ function mapRowToProgramDay(row: ProgramDayRow): Omit<ProgramDay, 'exercises'> {
     programId: row.program_id,
     dayIndex: row.day_index,
     name: row.name,
-    exercises: [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  } as Omit<ProgramDay, 'exercises'>;
+}
+
+/**
+ * Convert database row to ProgramDayExerciseSet object
+ */
+function mapRowToProgramDayExerciseSet(
+  row: ProgramDayExerciseSetRow
+): ProgramDayExerciseSet {
+  return {
+    id: row.id,
+    programDayExerciseId: row.program_day_exercise_id,
+    setNumber: row.set_number,
+    targetReps: row.target_reps ?? undefined,
+    targetWeight: row.target_weight ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 /**
- * Convert database row to ProgramDayExercise object
+ * Convert database row to ProgramDayExercise object (without sets)
  */
 function mapRowToProgramDayExercise(
   row: ProgramDayExerciseRow
-): ProgramDayExercise {
+): Omit<ProgramDayExercise, 'sets'> {
   return {
     id: row.id,
     programDayId: row.program_day_id,
@@ -459,7 +485,7 @@ export async function deleteProgramDayExercise(id: string): Promise<void> {
 }
 
 /**
- * Get all exercises for a program day
+ * Get all exercises for a program day (with sets)
  */
 export async function getProgramDayExercisesByDayId(
   dayId: string
@@ -468,7 +494,102 @@ export async function getProgramDayExercisesByDayId(
     'SELECT * FROM program_day_exercises WHERE program_day_id = ? ORDER BY "order" ASC',
     [dayId]
   );
-  return rows.map(mapRowToProgramDayExercise);
+
+  const exercises: ProgramDayExercise[] = [];
+
+  for (const row of rows) {
+    const sets = await getProgramDayExerciseSetsByExerciseId(row.id);
+    exercises.push({
+      ...mapRowToProgramDayExercise(row),
+      sets: sets.length > 0 ? sets : undefined,
+    });
+  }
+
+  return exercises;
+}
+
+// ============================================================================
+// Program Day Exercise Sets CRUD
+// ============================================================================
+
+/**
+ * Create a new program day exercise set
+ */
+export async function createProgramDayExerciseSet(
+  set: ProgramDayExerciseSet
+): Promise<void> {
+  await execute(
+    `INSERT INTO program_day_exercise_sets
+     (id, program_day_exercise_id, set_number, target_reps, target_weight, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      set.id,
+      set.programDayExerciseId,
+      set.setNumber,
+      set.targetReps ?? null,
+      set.targetWeight ?? null,
+      set.createdAt,
+      set.updatedAt,
+    ]
+  );
+}
+
+/**
+ * Update an existing program day exercise set
+ */
+export async function updateProgramDayExerciseSet(
+  id: string,
+  updates: Partial<Omit<ProgramDayExerciseSet, 'id' | 'programDayExerciseId' | 'setNumber' | 'createdAt'>>
+): Promise<void> {
+  const now = Date.now();
+  const setClauses: string[] = [];
+  const values: any[] = [];
+
+  if (updates.targetReps !== undefined) {
+    setClauses.push('target_reps = ?');
+    values.push(updates.targetReps ?? null);
+  }
+  if (updates.targetWeight !== undefined) {
+    setClauses.push('target_weight = ?');
+    values.push(updates.targetWeight ?? null);
+  }
+
+  setClauses.push('updated_at = ?');
+  values.push(now);
+
+  values.push(id);
+
+  await execute(
+    `UPDATE program_day_exercise_sets SET ${setClauses.join(', ')} WHERE id = ?`,
+    values
+  );
+}
+
+/**
+ * Delete a program day exercise set
+ */
+export async function deleteProgramDayExerciseSet(id: string): Promise<void> {
+  await execute('DELETE FROM program_day_exercise_sets WHERE id = ?', [id]);
+}
+
+/**
+ * Delete all sets for a program day exercise
+ */
+export async function deleteProgramDayExerciseSets(exerciseId: string): Promise<void> {
+  await execute('DELETE FROM program_day_exercise_sets WHERE program_day_exercise_id = ?', [exerciseId]);
+}
+
+/**
+ * Get all sets for a program day exercise
+ */
+export async function getProgramDayExerciseSetsByExerciseId(
+  exerciseId: string
+): Promise<ProgramDayExerciseSet[]> {
+  const rows = await getAll<ProgramDayExerciseSetRow>(
+    'SELECT * FROM program_day_exercise_sets WHERE program_day_exercise_id = ? ORDER BY set_number ASC',
+    [exerciseId]
+  );
+  return rows.map(mapRowToProgramDayExerciseSet);
 }
 
 // ============================================================================

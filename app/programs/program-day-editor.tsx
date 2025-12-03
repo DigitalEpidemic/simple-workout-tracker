@@ -37,6 +37,12 @@ import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 
+interface SetForm {
+  id?: string;
+  targetReps?: number;
+  targetWeight?: number;
+}
+
 interface ExerciseForm {
   id?: string;
   exerciseName: string;
@@ -44,6 +50,7 @@ interface ExerciseForm {
   targetSets?: number;
   targetReps?: number;
   targetWeight?: number;
+  sets?: SetForm[];
   restSeconds?: number;
   notes?: string;
 }
@@ -62,9 +69,7 @@ export default function ProgramDayEditorScreen() {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
   const [exerciseFormName, setExerciseFormName] = useState('');
-  const [exerciseFormSets, setExerciseFormSets] = useState('');
-  const [exerciseFormReps, setExerciseFormReps] = useState('');
-  const [exerciseFormWeight, setExerciseFormWeight] = useState('');
+  const [exerciseFormSets, setExerciseFormSets] = useState<SetForm[]>([]);
   const [exerciseFormRestTime, setExerciseFormRestTime] = useState('');
   const [exerciseFormNotes, setExerciseFormNotes] = useState('');
 
@@ -87,6 +92,11 @@ export default function ProgramDayEditorScreen() {
             targetSets: ex.targetSets,
             targetReps: ex.targetReps,
             targetWeight: ex.targetWeight,
+            sets: ex.sets?.map(s => ({
+              id: s.id,
+              targetReps: s.targetReps,
+              targetWeight: s.targetWeight,
+            })),
             restSeconds: ex.restSeconds,
             notes: ex.notes,
           }))
@@ -101,9 +111,7 @@ export default function ProgramDayEditorScreen() {
   const handleAddExercise = () => {
     setEditingExerciseIndex(null);
     setExerciseFormName('');
-    setExerciseFormSets('');
-    setExerciseFormReps('');
-    setExerciseFormWeight('');
+    setExerciseFormSets([{ targetReps: undefined, targetWeight: undefined }]);
     setExerciseFormRestTime('');
     setExerciseFormNotes('');
     setShowExerciseModal(true);
@@ -113,14 +121,50 @@ export default function ProgramDayEditorScreen() {
     const exercise = exercises[index];
     setEditingExerciseIndex(index);
     setExerciseFormName(exercise.exerciseName);
-    setExerciseFormSets(exercise.targetSets?.toString() || '');
-    setExerciseFormReps(exercise.targetReps?.toString() || '');
-    setExerciseFormWeight(
-      exercise.targetWeight ? convertWeight(exercise.targetWeight).toString() : ''
-    );
+
+    // Load sets if they exist, otherwise create a default set
+    if (exercise.sets && exercise.sets.length > 0) {
+      setExerciseFormSets(
+        exercise.sets.map(s => ({
+          id: s.id,
+          targetReps: s.targetReps,
+          targetWeight: s.targetWeight ? convertWeight(s.targetWeight) : undefined,
+        }))
+      );
+    } else {
+      // For legacy exercises with uniform sets, create individual set entries
+      const numSets = exercise.targetSets || 1;
+      setExerciseFormSets(
+        Array.from({ length: numSets }, () => ({
+          targetReps: exercise.targetReps,
+          targetWeight: exercise.targetWeight ? convertWeight(exercise.targetWeight) : undefined,
+        }))
+      );
+    }
+
     setExerciseFormRestTime(exercise.restSeconds?.toString() || '');
     setExerciseFormNotes(exercise.notes || '');
     setShowExerciseModal(true);
+  };
+
+  const handleAddSet = () => {
+    setExerciseFormSets([...exerciseFormSets, { targetReps: undefined, targetWeight: undefined }]);
+  };
+
+  const handleRemoveSet = (index: number) => {
+    if (exerciseFormSets.length > 1) {
+      setExerciseFormSets(exerciseFormSets.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleUpdateSet = (index: number, field: 'targetReps' | 'targetWeight', value: string) => {
+    const updated = [...exerciseFormSets];
+    if (field === 'targetReps') {
+      updated[index].targetReps = value ? parseInt(value, 10) : undefined;
+    } else {
+      updated[index].targetWeight = value ? parseWeight(parseFloat(value)) : undefined;
+    }
+    setExerciseFormSets(updated);
   };
 
   const handleSaveExercise = async () => {
@@ -129,9 +173,6 @@ export default function ProgramDayEditorScreen() {
       return;
     }
 
-    const sets = exerciseFormSets ? parseInt(exerciseFormSets, 10) : undefined;
-    const reps = exerciseFormReps ? parseInt(exerciseFormReps, 10) : undefined;
-    const weight = exerciseFormWeight ? parseWeight(parseFloat(exerciseFormWeight)) : undefined;
     const restTime = exerciseFormRestTime ? parseInt(exerciseFormRestTime, 10) : undefined;
 
     try {
@@ -141,9 +182,7 @@ export default function ProgramDayEditorScreen() {
         if (exercise.id) {
           await updateProgramDayExercise(exercise.id, {
             exerciseName: exerciseFormName.trim(),
-            targetSets: sets,
-            targetReps: reps,
-            targetWeight: weight,
+            sets: exerciseFormSets as any, // Type will be handled by API layer
             restSeconds: restTime,
             notes: exerciseFormNotes.trim() || undefined,
           });
@@ -153,9 +192,10 @@ export default function ProgramDayEditorScreen() {
         updated[editingExerciseIndex] = {
           ...updated[editingExerciseIndex],
           exerciseName: exerciseFormName.trim(),
-          targetSets: sets,
-          targetReps: reps,
-          targetWeight: weight,
+          sets: exerciseFormSets,
+          targetSets: undefined,
+          targetReps: undefined,
+          targetWeight: undefined,
           restSeconds: restTime,
           notes: exerciseFormNotes.trim() || undefined,
         };
@@ -164,9 +204,7 @@ export default function ProgramDayEditorScreen() {
         // Add new exercise
         const newExercise = await addProgramDayExercise(dayId!, {
           exerciseName: exerciseFormName.trim(),
-          targetSets: sets,
-          targetReps: reps,
-          targetWeight: weight,
+          sets: exerciseFormSets,
           restSeconds: restTime,
           notes: exerciseFormNotes.trim() || undefined,
         });
@@ -177,9 +215,7 @@ export default function ProgramDayEditorScreen() {
             id: newExercise.id,
             exerciseName: newExercise.exerciseName,
             order: exercises.length,
-            targetSets: newExercise.targetSets,
-            targetReps: newExercise.targetReps,
-            targetWeight: newExercise.targetWeight,
+            sets: exerciseFormSets,
             restSeconds: newExercise.restSeconds,
             notes: newExercise.notes,
           },
@@ -280,15 +316,29 @@ export default function ProgramDayEditorScreen() {
                   <View key={exercise.id || index} style={styles.exerciseCard}>
                     <Pressable style={styles.exerciseContent} onPress={() => handleEditExercise(index)}>
                       <ThemedText style={styles.exerciseName}>{exercise.exerciseName}</ThemedText>
-                      {(exercise.targetSets || exercise.targetReps || exercise.targetWeight) && (
-                        <ThemedText style={styles.exerciseTargets}>
-                          {exercise.targetSets && `${exercise.targetSets} sets`}
-                          {exercise.targetSets && exercise.targetReps && ' × '}
-                          {exercise.targetReps && `${exercise.targetReps} reps`}
-                          {exercise.targetWeight &&
-                            ` @ ${convertWeight(exercise.targetWeight)} ${getUnit()}`}
-                        </ThemedText>
+
+                      {/* Show individual sets if they exist */}
+                      {exercise.sets && exercise.sets.length > 0 ? (
+                        <View style={styles.setsDisplay}>
+                          {exercise.sets.map((set, setIndex) => (
+                            <ThemedText key={setIndex} style={styles.exerciseTargets}>
+                              Set {setIndex + 1}: {set.targetReps || '?'} reps @ {set.targetWeight ? `${convertWeight(set.targetWeight)} ${getUnit()}` : '?'}
+                            </ThemedText>
+                          ))}
+                        </View>
+                      ) : (
+                        /* Fallback to legacy uniform sets display */
+                        (exercise.targetSets || exercise.targetReps || exercise.targetWeight) && (
+                          <ThemedText style={styles.exerciseTargets}>
+                            {exercise.targetSets && `${exercise.targetSets} sets`}
+                            {exercise.targetSets && exercise.targetReps && ' × '}
+                            {exercise.targetReps && `${exercise.targetReps} reps`}
+                            {exercise.targetWeight &&
+                              ` @ ${convertWeight(exercise.targetWeight)} ${getUnit()}`}
+                          </ThemedText>
+                        )
                       )}
+
                       {exercise.restSeconds && (
                         <ThemedText style={styles.exerciseRest}>
                           Rest: {exercise.restSeconds}s
@@ -339,54 +389,66 @@ export default function ProgramDayEditorScreen() {
           <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
             <Input
               label="Exercise Name"
-              placeholder="e.g., Bench Press"
+              placeholder="e.g., Squat"
               value={exerciseFormName}
               onChangeText={setExerciseFormName}
               autoCapitalize="words"
               autoFocus
             />
 
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <Input
-                  label="Sets"
-                  placeholder="3"
-                  value={exerciseFormSets}
-                  onChangeText={setExerciseFormSets}
-                  keyboardType="number-pad"
-                />
+            {/* Sets Section */}
+            <View style={styles.setsSection}>
+              <View style={styles.setsSectionHeader}>
+                <ThemedText style={styles.setsLabel}>Sets</ThemedText>
+                <Pressable onPress={handleAddSet}>
+                  <ThemedText style={[styles.addSetButton, { color: colors.tint }]}>
+                    + Add Set
+                  </ThemedText>
+                </Pressable>
               </View>
-              <View style={styles.halfInput}>
-                <Input
-                  label="Reps"
-                  placeholder="10"
-                  value={exerciseFormReps}
-                  onChangeText={setExerciseFormReps}
-                  keyboardType="number-pad"
-                />
-              </View>
+
+              {exerciseFormSets.map((set, index) => (
+                <View key={index} style={styles.setRow}>
+                  <ThemedText style={styles.setNumber}>{index + 1}</ThemedText>
+                  <View style={styles.setInputs}>
+                    <View style={styles.setInputHalf}>
+                      <Input
+                        label="Reps"
+                        placeholder="10"
+                        value={set.targetReps?.toString() || ''}
+                        onChangeText={(value) => handleUpdateSet(index, 'targetReps', value)}
+                        keyboardType="number-pad"
+                      />
+                    </View>
+                    <View style={styles.setInputHalf}>
+                      <Input
+                        label={getUnit()}
+                        placeholder="225"
+                        value={set.targetWeight?.toString() || ''}
+                        onChangeText={(value) => handleUpdateSet(index, 'targetWeight', value)}
+                        keyboardType="decimal-pad"
+                      />
+                    </View>
+                  </View>
+                  {exerciseFormSets.length > 1 && (
+                    <Pressable
+                      onPress={() => handleRemoveSet(index)}
+                      style={styles.removeSetButton}
+                    >
+                      <IconSymbol name="trash" size={18} color={colors.error} />
+                    </Pressable>
+                  )}
+                </View>
+              ))}
             </View>
 
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <Input
-                  label={`Weight (${getUnit()})`}
-                  placeholder="135"
-                  value={exerciseFormWeight}
-                  onChangeText={setExerciseFormWeight}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-              <View style={styles.halfInput}>
-                <Input
-                  label="Rest Time (s)"
-                  placeholder="90"
-                  value={exerciseFormRestTime}
-                  onChangeText={setExerciseFormRestTime}
-                  keyboardType="number-pad"
-                />
-              </View>
-            </View>
+            <Input
+              label="Rest Time (s)"
+              placeholder="90"
+              value={exerciseFormRestTime}
+              onChangeText={setExerciseFormRestTime}
+              keyboardType="number-pad"
+            />
 
             <Input
               label="Notes (optional)"
@@ -459,6 +521,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
     opacity: 0.7,
   },
+  setsDisplay: {
+    marginTop: 4,
+  },
   exerciseRest: {
     fontSize: FontSizes.sm,
     opacity: 0.6,
@@ -508,5 +573,46 @@ const styles = StyleSheet.create({
   },
   halfInput: {
     flex: 1,
+  },
+  setsSection: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  setsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  setsLabel: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold,
+  },
+  addSetButton: {
+    fontSize: FontSizes.sm,
+    fontWeight: FontWeights.semibold,
+  },
+  setRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    gap: 8,
+  },
+  setNumber: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold,
+    width: 24,
+    textAlign: 'center',
+  },
+  setInputs: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  setInputHalf: {
+    flex: 1,
+  },
+  removeSetButton: {
+    padding: 8,
   },
 });
