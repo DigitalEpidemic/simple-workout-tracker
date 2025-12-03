@@ -13,14 +13,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
-  ScrollView,
   View,
   Text,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Modal,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   fetchTemplateById,
@@ -224,17 +222,19 @@ export default function TemplateBuilderScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.text }]}>
           {isEditing ? 'Edit Template' : 'New Template'}
         </Text>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={100}
+      >
         <Input
           label="Template Name"
           value={templateName}
@@ -275,7 +275,7 @@ export default function TemplateBuilderScreen() {
             fullWidth
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <Button
@@ -305,7 +305,12 @@ export default function TemplateBuilderScreen() {
             </Text>
           </View>
 
-          <ScrollView style={styles.modalContent}>
+          <KeyboardAwareScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            bottomOffset={40}
+          >
             <Input
               label="Exercise Name"
               value={exerciseFormName}
@@ -351,7 +356,7 @@ export default function TemplateBuilderScreen() {
               numberOfLines={3}
               containerStyle={styles.inputContainer}
             />
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
           <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
             <Button
@@ -368,7 +373,7 @@ export default function TemplateBuilderScreen() {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -436,7 +441,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
+  },
+  modalScrollContent: {
     padding: Spacing.lg,
+    paddingBottom: 120,
   },
   modalFooter: {
     flexDirection: 'row',

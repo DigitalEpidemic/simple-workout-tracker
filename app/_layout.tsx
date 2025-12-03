@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SettingsProvider } from '@/src/stores/settingsStore';
@@ -14,18 +15,20 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <SettingsProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
-          <Stack.Screen name="history" options={{ headerShown: false }} />
-          <Stack.Screen name="pr-history" options={{ headerShown: false }} />
-          <Stack.Screen name="programs" options={{ headerShown: false }} />
-          <Stack.Screen name="rest-timer" options={{ presentation: 'modal', headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </SettingsProvider>
+    <KeyboardProvider>
+      <SettingsProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="home" options={{ headerShown: false }} />
+            <Stack.Screen name="history" options={{ headerShown: false }} />
+            <Stack.Screen name="pr-history" options={{ headerShown: false }} />
+            <Stack.Screen name="programs" options={{ headerShown: false }} />
+            <Stack.Screen name="rest-timer" options={{ presentation: 'modal', headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </SettingsProvider>
+    </KeyboardProvider>
   );
 }

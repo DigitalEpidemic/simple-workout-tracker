@@ -12,15 +12,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
-  ScrollView,
   View,
   Text,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Modal,
   Pressable,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   updateProgramDayName,
@@ -293,12 +291,13 @@ export default function ProgramDayEditorScreen() {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={100}
       >
-        <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
-          <View style={styles.content}>
+          <View>
             {/* Day Name */}
             <View style={styles.section}>
               <Input
@@ -370,7 +369,6 @@ export default function ProgramDayEditorScreen() {
               )}
             </View>
           </View>
-        </ScrollView>
 
         {/* Save Button */}
         <View style={[styles.footer, { backgroundColor: colors.background }]}>
@@ -381,7 +379,7 @@ export default function ProgramDayEditorScreen() {
             disabled={saving}
           />
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
 
       {/* Exercise Modal */}
       <Modal
@@ -403,7 +401,12 @@ export default function ProgramDayEditorScreen() {
             </Pressable>
           </View>
 
-          <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
+          <KeyboardAwareScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalScrollContent}
+            keyboardShouldPersistTaps="handled"
+            bottomOffset={40}
+          >
             <Input
               label="Exercise Name"
               placeholder="e.g., Squat"
@@ -474,7 +477,7 @@ export default function ProgramDayEditorScreen() {
               onChangeText={setExerciseFormNotes}
               multiline
             />
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </ThemedView>
       </Modal>
     </ThemedView>
@@ -513,9 +516,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes.xl,
     fontWeight: FontWeights.semibold,
-  },
-  keyboardView: {
-    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -611,7 +611,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
+  },
+  modalScrollContent: {
     padding: 16,
+    paddingBottom: 120,
   },
   row: {
     flexDirection: 'row',
