@@ -13,7 +13,7 @@ import { ALL_TABLES, ALL_INDEXES } from './schema';
  * Current database version
  * Increment this when adding new migrations
  */
-export const CURRENT_DB_VERSION = 3;
+export const CURRENT_DB_VERSION = 4;
 
 /**
  * Migration function type
@@ -178,6 +178,21 @@ const migration3: Migration = async (db: SQLite.SQLiteDatabase) => {
 };
 
 /**
+ * Migration 4: Add total workouts completed tracking to programs
+ * Tracks the total number of workouts completed in the program
+ */
+const migration4: Migration = async (db: SQLite.SQLiteDatabase) => {
+  console.log('Running migration 4: Add total_workouts_completed to programs');
+
+  // Add total_workouts_completed column to programs table
+  await db.execAsync(`
+    ALTER TABLE programs ADD COLUMN total_workouts_completed INTEGER NOT NULL DEFAULT 0;
+  `);
+
+  console.log('Migration 4 complete');
+};
+
+/**
  * All migrations in order
  * Add new migrations to this array as needed
  */
@@ -185,6 +200,7 @@ const migrations: Migration[] = [
   migration1,
   migration2,
   migration3,
+  migration4,
 ];
 
 /**

@@ -192,7 +192,8 @@ export interface Program {
   name: string;
   description?: string;
   isActive: boolean; // Only one program can be active at a time
-  currentDayIndex: number; // Next day to perform (0-based)
+  currentDayIndex: number; // Index of next template day to perform (0-based, cycles through days array)
+  totalWorkoutsCompleted: number; // Total workouts completed (increments indefinitely, used for "Day N" display)
   days: ProgramDay[];
   createdAt: number;
   updatedAt: number;

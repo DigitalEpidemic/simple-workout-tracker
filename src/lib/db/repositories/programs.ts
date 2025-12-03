@@ -22,6 +22,7 @@ interface ProgramRow {
   description: string | null;
   is_active: number;
   current_day_index: number;
+  total_workouts_completed: number;
   created_at: number;
   updated_at: number;
 }
@@ -79,6 +80,7 @@ function mapRowToProgram(row: ProgramRow): Omit<Program, 'days'> {
     description: row.description ?? undefined,
     isActive: row.is_active === 1,
     currentDayIndex: row.current_day_index,
+    totalWorkoutsCompleted: row.total_workouts_completed,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   } as Omit<Program, 'days'>;
@@ -164,14 +166,15 @@ export async function createProgram(
   program: Omit<Program, 'days'>
 ): Promise<void> {
   await execute(
-    `INSERT INTO programs (id, name, description, is_active, current_day_index, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO programs (id, name, description, is_active, current_day_index, total_workouts_completed, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       program.id,
       program.name,
       program.description ?? null,
       program.isActive ? 1 : 0,
       program.currentDayIndex,
+      program.totalWorkoutsCompleted,
       program.createdAt,
       program.updatedAt,
     ]
@@ -204,6 +207,10 @@ export async function updateProgram(
   if (updates.currentDayIndex !== undefined) {
     setClauses.push('current_day_index = ?');
     values.push(updates.currentDayIndex);
+  }
+  if (updates.totalWorkoutsCompleted !== undefined) {
+    setClauses.push('total_workouts_completed = ?');
+    values.push(updates.totalWorkoutsCompleted);
   }
 
   setClauses.push('updated_at = ?');
@@ -598,16 +605,20 @@ export async function getProgramDayExerciseSetsByExerciseId(
 
 /**
  * Advance program to next day (called after completing a workout)
- * Wraps around to day 0 when reaching the end
+ * Finds the next unfinished day based on the completed day's position
+ * Also increments the total workout count
  */
-export async function advanceProgramDay(programId: string): Promise<void> {
+export async function advanceProgramDay(
+  programId: string,
+  completedDayId: string
+): Promise<void> {
   // Get current state
   const program = await getProgramById(programId);
   if (!program) {
     throw new Error(`Program ${programId} not found`);
   }
 
-  // Get total number of days
+  // Get all program days in order
   const days = await getProgramDaysByProgramId(programId);
   const totalDays = days.length;
 
@@ -616,19 +627,33 @@ export async function advanceProgramDay(programId: string): Promise<void> {
     return;
   }
 
-  // Calculate next index (wrap around)
-  const nextIndex = (program.currentDayIndex + 1) % totalDays;
+  // Find the index of the completed day
+  const completedDayIndex = days.findIndex((d) => d.id === completedDayId);
+  if (completedDayIndex === -1) {
+    console.warn(
+      `Completed day ${completedDayId} not found in program ${programId}`
+    );
+    return;
+  }
 
-  // Update program
-  await updateProgram(programId, { currentDayIndex: nextIndex });
+  // Calculate next index from the completed day (wrap around)
+  const nextIndex = (completedDayIndex + 1) % totalDays;
+
+  // Update program: advance to next day and increment workout count
+  await updateProgram(programId, {
+    currentDayIndex: nextIndex,
+    totalWorkoutsCompleted: program.totalWorkoutsCompleted + 1,
+  });
 
   console.log(
-    `Advanced program ${programId} from day ${program.currentDayIndex} to day ${nextIndex}`
+    `Advanced program ${programId} from completed day ${completedDayIndex} to day ${nextIndex}, total workouts: ${program.totalWorkoutsCompleted + 1}`
   );
 }
 
 /**
- * Get the next program day to perform (based on current_day_index)
+ * Get the next program day to perform
+ * Returns the program day at current_day_index, which points to the next
+ * day in the program sequence to be performed
  */
 export async function getNextProgramDay(
   programId: string
@@ -639,7 +664,7 @@ export async function getNextProgramDay(
   const days = await getProgramDaysByProgramId(programId);
   if (days.length === 0) return null;
 
-  // Return day at current_day_index
+  // Return day at current_day_index (next day in sequence)
   return days[program.currentDayIndex] ?? null;
 }
 

@@ -347,7 +347,7 @@ export async function completeSession(
       durationSeconds: duration,
     });
 
-    await advanceProgramDay(session.programId);
+    await advanceProgramDay(session.programId, session.programDayId);
   }
 }
 

@@ -185,7 +185,7 @@ export default function HomeScreen() {
                     </ThemedText>
                   )}
                   <ThemedText style={styles.programNextDay}>
-                    Next: Day {activeProgram.nextDay.dayIndex + 1} -{" "}
+                    Next: Day {activeProgram.program.totalWorkoutsCompleted + 1} -{" "}
                     {activeProgram.nextDay.name}
                   </ThemedText>
                 </View>

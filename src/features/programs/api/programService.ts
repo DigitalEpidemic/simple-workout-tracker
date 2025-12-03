@@ -48,6 +48,7 @@ export async function createNewProgram(
     description,
     isActive: false,
     currentDayIndex: 0,
+    totalWorkoutsCompleted: 0,
     days: [],
     createdAt: now,
     updatedAt: now,
