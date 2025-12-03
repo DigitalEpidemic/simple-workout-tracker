@@ -13,7 +13,7 @@ import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export interface ProgramCardProps {
-  program: Omit<Program, 'days'>;
+  program: Omit<Program, 'days'> & { dayCount: number };
   onPress?: () => void;
   onActivate?: () => void;
   onDelete?: () => void;
@@ -51,6 +51,9 @@ export function ProgramCard({
                 {program.description}
               </Text>
             )}
+            <Text style={[styles.dayCount, { color: colors.textSecondary }]}>
+              {program.dayCount} {program.dayCount === 1 ? 'day' : 'days'}
+            </Text>
           </View>
         </View>
 
@@ -143,6 +146,10 @@ const styles = StyleSheet.create({
   description: {
     fontSize: FontSizes.sm,
     lineHeight: FontSizes.sm * 1.5,
+  },
+  dayCount: {
+    fontSize: FontSizes.sm,
+    marginTop: Spacing.xs,
   },
   stats: {
     flexDirection: 'row',

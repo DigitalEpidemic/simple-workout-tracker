@@ -14,7 +14,7 @@ import { generateId } from '@/src/lib/utils/id';
  *
  * @returns Promise that resolves to array of programs (without full day/exercise data)
  */
-export async function fetchAllPrograms(): Promise<Omit<Program, 'days'>[]> {
+export async function fetchAllPrograms(): Promise<(Omit<Program, 'days'> & { dayCount: number })[]> {
   return programRepo.getAllPrograms();
 }
 

@@ -199,13 +199,27 @@ export async function deleteProgram(id: string): Promise<void> {
 }
 
 /**
- * Get all programs (without days/exercises)
+ * Get all programs with day count (without full day/exercise data)
  */
-export async function getAllPrograms(): Promise<Omit<Program, 'days'>[]> {
+export async function getAllPrograms(): Promise<(Omit<Program, 'days'> & { dayCount: number })[]> {
   const rows = await getAll<ProgramRow>(
     'SELECT * FROM programs ORDER BY created_at DESC'
   );
-  return rows.map(mapRowToProgram);
+
+  const programsWithDayCount = await Promise.all(
+    rows.map(async (row) => {
+      const dayCount = await getAll<{ count: number }>(
+        'SELECT COUNT(*) as count FROM program_days WHERE program_id = ?',
+        [row.id]
+      );
+      return {
+        ...mapRowToProgram(row),
+        dayCount: dayCount[0]?.count || 0,
+      };
+    })
+  );
+
+  return programsWithDayCount;
 }
 
 /**

@@ -156,10 +156,12 @@ export default function ProgramBuilderScreen() {
     try {
       setSaving(true);
 
-      if (isEditing && programId) {
+      // If we already have a programId (from creating days), update it
+      // Otherwise create a new one
+      if (programId) {
         await updateExistingProgram(programId, programName.trim(), programDescription.trim());
         if (!silent) {
-          Alert.alert('Success', 'Program updated');
+          Alert.alert('Success', 'Program saved');
           router.back();
         }
         return programId;

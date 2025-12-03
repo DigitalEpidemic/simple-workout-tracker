@@ -38,7 +38,7 @@ export default function ProgramListScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
-  const [programs, setPrograms] = useState<Omit<Program, 'days'>[]>([]);
+  const [programs, setPrograms] = useState<(Omit<Program, 'days'> & { dayCount: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -73,7 +73,7 @@ export default function ProgramListScreen() {
   const handleEdit = (programId: string) => {
     router.push({
       pathname: '/programs/program-builder',
-      params: { programId },
+      params: { id: programId },
     });
   };
 
@@ -98,7 +98,7 @@ export default function ProgramListScreen() {
     }
   };
 
-  const handleDelete = (program: Omit<Program, 'days'>) => {
+  const handleDelete = (program: Omit<Program, 'days'> & { dayCount: number }) => {
     Alert.alert(
       'Delete Program',
       `Are you sure you want to delete "${program.name}"? This will delete all days and exercises. This action cannot be undone.`,
