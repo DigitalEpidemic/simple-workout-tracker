@@ -111,17 +111,34 @@ export default function StartWorkoutScreen() {
         const now = Date.now();
         const sessionId = generateId();
 
-        // Create exercise instances from program day exercises
-        const exercises = programDay.exercises.map((ex, index) => ({
-          id: generateId(),
-          workoutSessionId: sessionId,
-          name: ex.exerciseName,
-          order: ex.order ?? index,
-          sets: [],
-          notes: ex.notes,
-          createdAt: now,
-          updatedAt: now,
-        }));
+        // Create exercise instances from program day exercises with sets
+        const exercises = programDay.exercises.map((ex, index) => {
+          const exerciseId = generateId();
+          const numSets = ex.targetSets ?? 0;
+
+          // Create sets based on program template
+          const sets = Array.from({ length: numSets }, (_, setIndex) => ({
+            id: generateId(),
+            exerciseId,
+            workoutSessionId: sessionId,
+            setNumber: setIndex + 1,
+            reps: ex.targetReps ?? 0,
+            weight: ex.targetWeight ?? 0,
+            completed: false,
+            createdAt: now,
+          }));
+
+          return {
+            id: exerciseId,
+            workoutSessionId: sessionId,
+            name: ex.exerciseName,
+            order: ex.order ?? index,
+            sets,
+            notes: ex.notes,
+            createdAt: now,
+            updatedAt: now,
+          };
+        });
 
         // Create workout session with program context
         session = {

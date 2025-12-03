@@ -505,11 +505,11 @@ export async function reorderExercises(
 /**
  * Create a complete workout session with exercises in a transaction
  *
- * Note: This does not create sets - sets should be created separately
- * as they are typically added during the workout.
+ * Note: If exercises contain sets, they will be created in the same transaction.
+ * This is useful when starting workouts from programs/templates with pre-defined sets.
  *
- * @param session - Complete workout session with exercises
- * @returns Promise that resolves when session and exercises are created
+ * @param session - Complete workout session with exercises (and optionally sets)
+ * @returns Promise that resolves when session, exercises, and sets are created
  */
 export async function createSessionWithExercises(
   session: WorkoutSession
@@ -517,12 +517,15 @@ export async function createSessionWithExercises(
   const statements = [
     {
       sql: `INSERT INTO workout_sessions
-            (id, template_id, template_name, name, start_time, end_time, duration, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (id, template_id, template_name, program_id, program_day_id, program_day_name, name, start_time, end_time, duration, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       params: [
         session.id,
         session.templateId ?? null,
         session.templateName ?? null,
+        session.programId ?? null,
+        session.programDayId ?? null,
+        session.programDayName ?? null,
         session.name,
         session.startTime,
         session.endTime ?? null,
@@ -550,6 +553,28 @@ export async function createSessionWithExercises(
         exercise.updatedAt,
       ],
     });
+
+    // Add set inserts if the exercise has pre-defined sets
+    if (exercise.sets && exercise.sets.length > 0) {
+      for (const set of exercise.sets) {
+        statements.push({
+          sql: `INSERT INTO workout_sets
+                (id, exercise_id, workout_session_id, set_number, reps, weight, completed, created_at, completed_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          params: [
+            set.id,
+            set.exerciseId,
+            set.workoutSessionId,
+            set.setNumber,
+            set.reps,
+            set.weight,
+            set.completed ? 1 : 0,
+            set.createdAt,
+            set.completedAt ?? null,
+          ],
+        });
+      }
+    }
   }
 
   await transaction(statements);
