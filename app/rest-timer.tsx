@@ -67,7 +67,7 @@ export default function RestTimerModal() {
   const notificationIdRef = useRef<string | null>(null);
   const completionNotificationIdRef = useRef<string | null>(null);
 
-  // Request notification permissions on mount
+  // Request notification permissions and schedule completion notification on mount
   useEffect(() => {
     const requestPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
@@ -76,7 +76,16 @@ export default function RestTimerModal() {
       }
     };
 
+    const scheduleInitial = async () => {
+      try {
+        await scheduleCompletionNotification(initialDuration);
+      } catch (error) {
+        console.log("Error scheduling initial completion notification:", error);
+      }
+    };
+
     requestPermissions();
+    scheduleInitial();
   }, []);
 
   // Initialize timer end time
@@ -96,6 +105,30 @@ export default function RestTimerModal() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Helper to schedule completion notification
+  const scheduleCompletionNotification = async (seconds: number) => {
+    const completionNotificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Rest Complete! 💪",
+        body: "Time to get back to your workout",
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        interruptionLevel: "critical" as any,
+        categoryIdentifier: "timer",
+        badge: 1,
+        sticky: false,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: seconds,
+        repeats: false,
+      },
+      identifier: "rest-timer-notification",
+    });
+    completionNotificationIdRef.current = completionNotificationId;
+    return completionNotificationId;
   };
 
   // Schedule or update the ongoing notification AND schedule completion notification
@@ -120,32 +153,16 @@ export default function RestTimerModal() {
           autoDismiss: false,
           categoryIdentifier: "timer",
           interruptionLevel: "timeSensitive" as any, // iOS: Show on lock screen
+          badge: 0,
         },
         trigger: null, // Show immediately
-        identifier: "rest-timer-active", // Fixed identifier for replacement
+        identifier: "rest-timer-notification", // Shared identifier
       });
 
       notificationIdRef.current = notificationId;
 
-      // Schedule completion notification for exact time - will replace the running notification
-      const completionNotificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Rest Complete! 💪",
-          body: "Time to get back to your workout",
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          interruptionLevel: "timeSensitive" as any,
-          categoryIdentifier: "timer",
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: remainingSeconds,
-          repeats: false,
-        },
-        identifier: "rest-timer-active", // Same identifier - replaces the running notification
-      });
-
-      completionNotificationIdRef.current = completionNotificationId;
+      // Schedule completion notification for exact time - replaces the running notification
+      await scheduleCompletionNotification(remainingSeconds);
     } catch (error) {
       console.log("Error scheduling notification:", error);
     }
@@ -164,25 +181,6 @@ export default function RestTimerModal() {
       }
     } catch (error) {
       console.log("Error canceling notifications:", error);
-    }
-  };
-
-  // Schedule completion notification (for foreground completion)
-  const scheduleCompletionNotification = async () => {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Rest Complete! 💪",
-          body: "Time to get back to your workout",
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          interruptionLevel: "timeSensitive" as any, // iOS: Show on lock screen
-        },
-        trigger: null, // Show immediately
-        identifier: "rest-timer-active", // Same identifier - replaces running notification
-      });
-    } catch (error) {
-      console.log("Error scheduling completion notification:", error);
     }
   };
 
@@ -255,11 +253,8 @@ export default function RestTimerModal() {
 
     setHasCompleted(true);
 
-    // Cancel ongoing notification updates
-    await cancelNotifications();
-
-    // Show completion notification
-    await scheduleCompletionNotification();
+    // Don't cancel notifications here - let the scheduled completion notification fire
+    // This prevents duplicate notifications when returning from background
 
     // Haptic feedback (if enabled)
     if (hapticsEnabled) {
