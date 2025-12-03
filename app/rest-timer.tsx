@@ -65,6 +65,7 @@ export default function RestTimerModal() {
 
   // Notification tracking
   const notificationIdRef = useRef<string | null>(null);
+  const completionNotificationIdRef = useRef<string | null>(null);
 
   // Request notification permissions on mount
   useEffect(() => {
@@ -97,15 +98,18 @@ export default function RestTimerModal() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Schedule or update the ongoing notification
-  const scheduleOrUpdateNotification = async () => {
+  // Schedule or update the ongoing notification AND schedule completion notification
+  const scheduleOrUpdateNotification = async (remainingSeconds: number) => {
     try {
-      // Cancel existing notification if any
+      // Cancel existing notifications if any
       if (notificationIdRef.current) {
         await Notifications.dismissNotificationAsync(notificationIdRef.current);
       }
+      if (completionNotificationIdRef.current) {
+        await Notifications.cancelScheduledNotificationAsync(completionNotificationIdRef.current);
+      }
 
-      // Schedule new persistent notification
+      // Schedule persistent "timer running" notification
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: "Rest Timer Running",
@@ -115,11 +119,33 @@ export default function RestTimerModal() {
           sticky: true,
           autoDismiss: false,
           categoryIdentifier: "timer",
+          interruptionLevel: "timeSensitive" as any, // iOS: Show on lock screen
         },
         trigger: null, // Show immediately
+        identifier: "rest-timer-active", // Fixed identifier for replacement
       });
 
       notificationIdRef.current = notificationId;
+
+      // Schedule completion notification for exact time - will replace the running notification
+      const completionNotificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Rest Complete! 💪",
+          body: "Time to get back to your workout",
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          interruptionLevel: "timeSensitive" as any,
+          categoryIdentifier: "timer",
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: remainingSeconds,
+          repeats: false,
+        },
+        identifier: "rest-timer-active", // Same identifier - replaces the running notification
+      });
+
+      completionNotificationIdRef.current = completionNotificationId;
     } catch (error) {
       console.log("Error scheduling notification:", error);
     }
@@ -132,12 +158,16 @@ export default function RestTimerModal() {
         await Notifications.dismissNotificationAsync(notificationIdRef.current);
         notificationIdRef.current = null;
       }
+      if (completionNotificationIdRef.current) {
+        await Notifications.cancelScheduledNotificationAsync(completionNotificationIdRef.current);
+        completionNotificationIdRef.current = null;
+      }
     } catch (error) {
       console.log("Error canceling notifications:", error);
     }
   };
 
-  // Schedule completion notification
+  // Schedule completion notification (for foreground completion)
   const scheduleCompletionNotification = async () => {
     try {
       await Notifications.scheduleNotificationAsync({
@@ -146,8 +176,10 @@ export default function RestTimerModal() {
           body: "Time to get back to your workout",
           sound: true,
           priority: Notifications.AndroidNotificationPriority.HIGH,
+          interruptionLevel: "timeSensitive" as any, // iOS: Show on lock screen
         },
         trigger: null, // Show immediately
+        identifier: "rest-timer-active", // Same identifier - replaces running notification
       });
     } catch (error) {
       console.log("Error scheduling completion notification:", error);
@@ -187,8 +219,8 @@ export default function RestTimerModal() {
         if (!isPaused && !hasCompleted) {
           backgroundTimeRef.current = Date.now();
 
-          // Show notification (simple, no live updates needed)
-          scheduleOrUpdateNotification();
+          // Show notification and schedule completion notification
+          scheduleOrUpdateNotification(timeRemaining);
         }
       }
 

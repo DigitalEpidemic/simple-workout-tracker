@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -44,7 +47,8 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#ffffff",
-          "sounds": []
+          "sounds": [],
+          "iosDisplayInForeground": true
         }
       ]
     ],
