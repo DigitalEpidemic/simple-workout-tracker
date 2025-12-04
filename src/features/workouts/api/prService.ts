@@ -5,14 +5,10 @@
  * PRs are tracked for each exercise at specific rep ranges (1-12 reps).
  */
 
-import { PRRecord, WorkoutSession, Exercise, WorkoutSet } from '@/types';
-import {
-  recordPR,
-  isNewPR,
-  getPRByExerciseAndReps,
-} from '@/src/lib/db/repositories/pr-records';
-import { getSessionById } from '@/src/lib/db/repositories/sessions';
-import { formatWeight } from '@/src/lib/utils/formatters';
+import { isNewPR, recordPR } from "@/src/lib/db/repositories/pr-records";
+import { getSessionById } from "@/src/lib/db/repositories/sessions";
+import { formatWeight } from "@/src/lib/utils/formatters";
+import { Exercise, PRRecord } from "@/types";
 
 /**
  * Normalize exercise name for PR tracking
@@ -145,9 +141,9 @@ export async function detectAndSavePRs(sessionId: string): Promise<PRRecord[]> {
  */
 export function getDisplayName(normalizedName: string): string {
   return normalizedName
-    .split(' ')
+    .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
 /**
@@ -157,8 +153,13 @@ export function getDisplayName(normalizedName: string): string {
  * @param weightUnit - User's preferred weight unit ('lbs' or 'kg')
  * @returns Formatted string like "Bench Press: 225 lbs x 5 reps"
  */
-export function formatPRDescription(pr: PRRecord, weightUnit: 'lbs' | 'kg' = 'lbs'): string {
+export function formatPRDescription(
+  pr: PRRecord,
+  weightUnit: "lbs" | "kg" = "lbs"
+): string {
   const displayName = getDisplayName(pr.exerciseName);
   const formattedWeight = formatWeight(pr.weight, weightUnit);
-  return `${displayName}: ${formattedWeight} × ${pr.reps} ${pr.reps === 1 ? 'rep' : 'reps'}`;
+  return `${displayName}: ${formattedWeight} × ${pr.reps} ${
+    pr.reps === 1 ? "rep" : "reps"
+  }`;
 }
