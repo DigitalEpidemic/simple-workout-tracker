@@ -6,8 +6,8 @@
  * from one version to the next.
  */
 
-import * as SQLite from 'expo-sqlite';
-import { ALL_TABLES, ALL_INDEXES } from './schema';
+import * as SQLite from "expo-sqlite";
+import { ALL_INDEXES, ALL_TABLES } from "./schema";
 
 /**
  * Current database version
@@ -25,7 +25,7 @@ type Migration = (db: SQLite.SQLiteDatabase) => Promise<void>;
  * Creates all tables and indexes for the first time
  */
 const migration1: Migration = async (db: SQLite.SQLiteDatabase) => {
-  console.log('Running migration 1: Initial schema');
+  console.log("Running migration 1: Initial schema");
 
   // Create all tables
   for (const createTableSQL of ALL_TABLES) {
@@ -38,9 +38,9 @@ const migration1: Migration = async (db: SQLite.SQLiteDatabase) => {
   }
 
   // Enable foreign keys
-  await db.execAsync('PRAGMA foreign_keys = ON;');
+  await db.execAsync("PRAGMA foreign_keys = ON;");
 
-  console.log('Migration 1 complete');
+  console.log("Migration 1 complete");
 };
 
 /**
@@ -48,7 +48,7 @@ const migration1: Migration = async (db: SQLite.SQLiteDatabase) => {
  * Creates tables for multi-day training programs
  */
 const migration2: Migration = async (db: SQLite.SQLiteDatabase) => {
-  console.log('Running migration 2: Add program tables');
+  console.log("Running migration 2: Add program tables");
 
   // Create programs table
   await db.execAsync(`
@@ -144,7 +144,7 @@ const migration2: Migration = async (db: SQLite.SQLiteDatabase) => {
     ALTER TABLE workout_sessions ADD COLUMN program_day_name TEXT;
   `);
 
-  console.log('Migration 2 complete');
+  console.log("Migration 2 complete");
 };
 
 /**
@@ -152,7 +152,7 @@ const migration2: Migration = async (db: SQLite.SQLiteDatabase) => {
  * Allows individual set configurations for program exercises
  */
 const migration3: Migration = async (db: SQLite.SQLiteDatabase) => {
-  console.log('Running migration 3: Add program day exercise sets table');
+  console.log("Running migration 3: Add program day exercise sets table");
 
   // Create program_day_exercise_sets table
   await db.execAsync(`
@@ -174,7 +174,7 @@ const migration3: Migration = async (db: SQLite.SQLiteDatabase) => {
     ON program_day_exercise_sets(program_day_exercise_id);
   `);
 
-  console.log('Migration 3 complete');
+  console.log("Migration 3 complete");
 };
 
 /**
@@ -182,21 +182,21 @@ const migration3: Migration = async (db: SQLite.SQLiteDatabase) => {
  * Tracks the total number of workouts completed in the program
  */
 const migration4: Migration = async (db: SQLite.SQLiteDatabase) => {
-  console.log('Running migration 4: Add total_workouts_completed to programs');
+  console.log("Running migration 4: Add total_workouts_completed to programs");
 
   // Add total_workouts_completed column to programs table
   await db.execAsync(`
     ALTER TABLE programs ADD COLUMN total_workouts_completed INTEGER NOT NULL DEFAULT 0;
   `);
 
-  console.log('Migration 4 complete');
+  console.log("Migration 4 complete");
 };
 
 /**
  * All migrations in order
  * Add new migrations to this array as needed
  */
-const migrations: Migration[] = [
+export const migrations: Migration[] = [
   migration1,
   migration2,
   migration3,
@@ -209,11 +209,11 @@ const migrations: Migration[] = [
 async function getDatabaseVersion(db: SQLite.SQLiteDatabase): Promise<number> {
   try {
     const result = await db.getFirstAsync<{ user_version: number }>(
-      'PRAGMA user_version;'
+      "PRAGMA user_version;"
     );
     return result?.user_version ?? 0;
   } catch (error) {
-    console.error('Error getting database version:', error);
+    console.error("Error getting database version:", error);
     return 0;
   }
 }
@@ -234,16 +234,14 @@ async function setDatabaseVersion(
  * @param db - SQLite database instance
  * @returns Promise that resolves when all migrations are complete
  */
-export async function runMigrations(
-  db: SQLite.SQLiteDatabase
-): Promise<void> {
+export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   const currentVersion = await getDatabaseVersion(db);
 
   console.log(`Current database version: ${currentVersion}`);
   console.log(`Target database version: ${CURRENT_DB_VERSION}`);
 
   if (currentVersion >= CURRENT_DB_VERSION) {
-    console.log('Database is up to date');
+    console.log("Database is up to date");
     return;
   }
 
@@ -264,13 +262,11 @@ export async function runMigrations(
       console.log(`Migration ${migrationNumber} completed successfully`);
     } catch (error) {
       console.error(`Migration ${migrationNumber} failed:`, error);
-      throw new Error(
-        `Failed to run migration ${migrationNumber}: ${error}`
-      );
+      throw new Error(`Failed to run migration ${migrationNumber}: ${error}`);
     }
   }
 
-  console.log('All migrations completed successfully');
+  console.log("All migrations completed successfully");
 }
 
 /**
@@ -278,23 +274,23 @@ export async function runMigrations(
  * WARNING: This will delete all data!
  */
 export async function resetDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
-  console.warn('RESETTING DATABASE - ALL DATA WILL BE LOST');
+  console.warn("RESETTING DATABASE - ALL DATA WILL BE LOST");
 
   // Drop all tables in reverse order (to handle foreign key constraints)
   const tables = [
-    'sync_queue',
-    'user_settings',
-    'program_history',
-    'program_day_exercise_sets',
-    'program_day_exercises',
-    'program_days',
-    'programs',
-    'pr_records',
-    'workout_sets',
-    'exercises',
-    'workout_sessions',
-    'exercise_templates',
-    'workout_templates',
+    "sync_queue",
+    "user_settings",
+    "program_history",
+    "program_day_exercise_sets",
+    "program_day_exercises",
+    "program_days",
+    "programs",
+    "pr_records",
+    "workout_sets",
+    "exercises",
+    "workout_sessions",
+    "exercise_templates",
+    "workout_templates",
   ];
 
   for (const table of tables) {
@@ -304,5 +300,5 @@ export async function resetDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
   // Reset version to 0
   await setDatabaseVersion(db, 0);
 
-  console.log('Database reset complete');
+  console.log("Database reset complete");
 }
