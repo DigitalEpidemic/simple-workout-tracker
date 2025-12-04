@@ -5,7 +5,7 @@
  * The timer continues running even when the component unmounts/remounts.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export interface UseTimerOptions {
   startTime: number; // Unix timestamp when workout started
@@ -25,7 +25,7 @@ function formatTime(totalSeconds: number): string {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  const pad = (num: number) => num.toString().padStart(2, '0');
+  const pad = (num: number) => num.toString().padStart(2, "0");
 
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
@@ -36,7 +36,10 @@ function formatTime(totalSeconds: number): string {
  * @param options - Timer configuration
  * @returns Timer state and formatted time
  */
-export function useTimer({ startTime, isActive = true }: UseTimerOptions): UseTimerReturn {
+export function useTimer({
+  startTime,
+  isActive = true,
+}: UseTimerOptions): UseTimerReturn {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -53,11 +56,9 @@ export function useTimer({ startTime, isActive = true }: UseTimerOptions): UseTi
 
   // Start/stop interval based on isActive
   useEffect(() => {
+    // If not active, simply return. The cleanup function from the PREVIOUS run
+    // has already cleared the interval, so we don't need to do it again here.
     if (!isActive) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
       return;
     }
 
