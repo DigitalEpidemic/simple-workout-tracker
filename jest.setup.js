@@ -13,6 +13,17 @@ if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
 }
 
+// Mock expo-sqlite
+jest.mock('expo-sqlite', () => ({
+  openDatabaseSync: jest.fn(() => ({
+    execAsync: jest.fn(),
+    getAllAsync: jest.fn(),
+    getFirstAsync: jest.fn(),
+    runAsync: jest.fn(),
+    withTransactionAsync: jest.fn(),
+  })),
+}))
+
 // Mock expo-router (not included in jest-expo)
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(() => ({
