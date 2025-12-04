@@ -109,24 +109,28 @@ export default function RestTimerModal() {
 
   // Helper to schedule/show completion notification
   const scheduleCompletionNotification = async (seconds: number | null) => {
-    const completionNotificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Rest Complete! 💪",
-        body: "Time to get back to your workout",
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.MAX,
-        interruptionLevel: "critical" as any,
-        categoryIdentifier: "timer",
-        badge: 1,
-        sticky: false,
-      },
-      trigger: seconds !== null ? {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: seconds,
-        repeats: false,
-      } : null, // null = show immediately
-      identifier: "rest-timer-notification",
-    });
+    const completionNotificationId =
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Rest Complete! 💪",
+          body: "Time to get back to your workout",
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          interruptionLevel: "critical" as any,
+          categoryIdentifier: "timer",
+          badge: 0,
+          sticky: false,
+        },
+        trigger:
+          seconds !== null
+            ? {
+                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                seconds: seconds,
+                repeats: false,
+              }
+            : null, // null = show immediately
+        identifier: "rest-timer-notification",
+      });
     completionNotificationIdRef.current = completionNotificationId;
     return completionNotificationId;
   };
@@ -139,7 +143,9 @@ export default function RestTimerModal() {
         await Notifications.dismissNotificationAsync(notificationIdRef.current);
       }
       if (completionNotificationIdRef.current) {
-        await Notifications.cancelScheduledNotificationAsync(completionNotificationIdRef.current);
+        await Notifications.cancelScheduledNotificationAsync(
+          completionNotificationIdRef.current
+        );
       }
 
       // Schedule persistent "timer running" notification
@@ -176,7 +182,9 @@ export default function RestTimerModal() {
         notificationIdRef.current = null;
       }
       if (completionNotificationIdRef.current) {
-        await Notifications.cancelScheduledNotificationAsync(completionNotificationIdRef.current);
+        await Notifications.cancelScheduledNotificationAsync(
+          completionNotificationIdRef.current
+        );
         completionNotificationIdRef.current = null;
       }
     } catch (error) {
