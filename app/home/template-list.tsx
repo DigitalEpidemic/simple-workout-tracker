@@ -9,28 +9,31 @@
  * - Navigate to start workout from template
  */
 
-import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Colors, FontSizes, FontWeights, Spacing } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  Alert,
-  RefreshControl,
+  fetchAllTemplates,
+  removeTemplate,
+} from "@/src/features/templates/api/templateService";
+import { TemplateCard } from "@/src/features/templates/components/TemplateCard";
+import { WorkoutTemplate } from "@/types";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
   ActivityIndicator,
+  Alert,
   Pressable,
-} from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { WorkoutTemplate } from '@/types';
-import { fetchAllTemplates, removeTemplate } from '@/src/features/templates/api/templateService';
-import { TemplateCard } from '@/src/features/templates/components/TemplateCard';
-import { Button } from '@/components/ui/button';
-import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function TemplateListScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -42,8 +45,8 @@ export default function TemplateListScreen() {
       const data = await fetchAllTemplates();
       setTemplates(data);
     } catch (error) {
-      console.error('Error loading templates:', error);
-      Alert.alert('Error', 'Failed to load templates');
+      console.error("Error loading templates:", error);
+      Alert.alert("Error", "Failed to load templates");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,35 +65,35 @@ export default function TemplateListScreen() {
   };
 
   const handleCreateNew = () => {
-    router.push('/home/template-builder');
+    router.push("/home/template-builder");
   };
 
   const handleEdit = (templateId: string) => {
     router.push({
-      pathname: '/home/template-builder',
+      pathname: "/home/template-builder",
       params: { templateId },
     });
   };
 
   const handleDelete = (template: WorkoutTemplate) => {
     Alert.alert(
-      'Delete Template',
+      "Delete Template",
       `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               await removeTemplate(template.id);
               await loadTemplates();
             } catch (error) {
-              console.error('Error deleting template:', error);
-              Alert.alert('Error', 'Failed to delete template');
+              console.error("Error deleting template:", error);
+              Alert.alert("Error", "Failed to delete template");
             }
           },
         },
@@ -100,7 +103,7 @@ export default function TemplateListScreen() {
 
   const handleTemplatePress = (template: WorkoutTemplate) => {
     router.push({
-      pathname: '/home/start-workout',
+      pathname: "/home/start-workout",
       params: { templateId: template.id },
     });
   };
@@ -111,7 +114,9 @@ export default function TemplateListScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.centerContainer, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -122,18 +127,24 @@ export default function TemplateListScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <Pressable onPress={handleBack} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>
+              ←
+            </Text>
           </Pressable>
           <View style={styles.titleContainer}>
-            <Text style={[styles.title, { color: colors.text }]}>Workout Templates</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Workout Templates
+            </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {templates.length} {templates.length === 1 ? 'template' : 'templates'}
+              {templates.length}{" "}
+              {templates.length === 1 ? "template" : "templates"}
             </Text>
           </View>
         </View>
       </View>
 
       <ScrollView
+        testID="template-list-scroll" // Added for testing
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -146,8 +157,12 @@ export default function TemplateListScreen() {
       >
         {templates.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Templates Yet</Text>
-            <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No Templates Yet
+            </Text>
+            <Text
+              style={[styles.emptyDescription, { color: colors.textSecondary }]}
+            >
               Create your first workout template to get started
             </Text>
             <Button
@@ -173,7 +188,11 @@ export default function TemplateListScreen() {
 
       {templates.length > 0 && (
         <View style={[styles.footer, { borderTopColor: colors.border }]}>
-          <Button title="Create New Template" onPress={handleCreateNew} fullWidth />
+          <Button
+            title="Create New Template"
+            onPress={handleCreateNew}
+            fullWidth
+          />
         </View>
       )}
     </View>
@@ -186,8 +205,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     paddingHorizontal: Spacing.lg,
@@ -196,23 +215,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.medium,
   },
   titleContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: FontSizes.xl,
@@ -230,20 +249,20 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing['3xl'],
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing["3xl"],
     paddingHorizontal: Spacing.xl,
   },
   emptyTitle: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.semibold,
     marginBottom: Spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyDescription: {
     fontSize: FontSizes.base,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.xl,
   },
   emptyButton: {
