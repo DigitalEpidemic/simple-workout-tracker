@@ -8,27 +8,38 @@
  * - Support for empty workout (no template)
  */
 
-import React, { useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button";
 import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
+  BorderRadius,
+  Colors,
+  FontSizes,
+  FontWeights,
+  Spacing,
+} from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { fetchTemplateById } from "@/src/features/templates/api/templateService";
+import {
+  startEmptyWorkout, // Moved to static import
+  startWorkoutFromTemplate,
+} from "@/src/features/workouts/api/workoutService";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
+import * as programRepo from "@/src/lib/db/repositories/programs";
+import { createSessionWithExercises } from "@/src/lib/db/repositories/sessions"; // Moved to static import
+import { consolidateSets } from "@/src/lib/utils/formatters";
+import { generateId } from "@/src/lib/utils/id"; // Moved to static import
+import { workoutStore } from "@/src/stores/workoutStore";
+import { ProgramDay, WorkoutTemplate } from "@/types";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
   ActivityIndicator,
   Alert,
   Pressable,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { WorkoutTemplate, ProgramDay } from '@/types';
-import { fetchTemplateById } from '@/src/features/templates/api/templateService';
-import { startWorkoutFromTemplate } from '@/src/features/workouts/api/workoutService';
-import { workoutStore } from '@/src/stores/workoutStore';
-import * as programRepo from '@/src/lib/db/repositories/programs';
-import { Button } from '@/components/ui/button';
-import { Colors, FontSizes, FontWeights, Spacing, BorderRadius } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
-import { consolidateSets } from '@/src/lib/utils/formatters';
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function StartWorkoutScreen() {
   const router = useRouter();
@@ -37,7 +48,7 @@ export default function StartWorkoutScreen() {
     programId?: string;
     programDayId?: string;
   }>();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { displayWeight } = useWeightDisplay();
 
@@ -62,14 +73,14 @@ export default function StartWorkoutScreen() {
     try {
       const day = await programRepo.getProgramDayById(programDayId as string);
       if (!day) {
-        Alert.alert('Error', 'Program day not found');
+        Alert.alert("Error", "Program day not found");
         router.back();
         return;
       }
       setProgramDay(day);
     } catch (error) {
-      console.error('Error loading program day:', error);
-      Alert.alert('Error', 'Failed to load program day');
+      console.error("Error loading program day:", error);
+      Alert.alert("Error", "Failed to load program day");
       router.back();
     } finally {
       setLoading(false);
@@ -86,14 +97,14 @@ export default function StartWorkoutScreen() {
     try {
       const data = await fetchTemplateById(templateId as string);
       if (!data) {
-        Alert.alert('Error', 'Template not found');
+        Alert.alert("Error", "Template not found");
         router.back();
         return;
       }
       setTemplate(data);
     } catch (error) {
-      console.error('Error loading template:', error);
-      Alert.alert('Error', 'Failed to load template');
+      console.error("Error loading template:", error);
+      Alert.alert("Error", "Failed to load template");
       router.back();
     } finally {
       setLoading(false);
@@ -106,9 +117,6 @@ export default function StartWorkoutScreen() {
 
       if (programDay) {
         // Create workout session from program day
-        const { generateId } = await import('@/src/lib/utils/id');
-        const { createSessionWithExercises } = await import('@/src/lib/db/repositories/sessions');
-
         const now = Date.now();
         const sessionId = generateId();
 
@@ -176,8 +184,7 @@ export default function StartWorkoutScreen() {
         session = await startWorkoutFromTemplate(template);
       } else {
         // Start empty workout (no template)
-        const { startEmptyWorkout } = await import('@/src/features/workouts/api/workoutService');
-        session = await startEmptyWorkout('Empty Workout');
+        session = await startEmptyWorkout("Empty Workout");
       }
 
       // Update global store with active session
@@ -186,8 +193,8 @@ export default function StartWorkoutScreen() {
       // Navigate to active workout screen
       router.replace(`/home/active-workout?workoutSessionId=${session.id}`);
     } catch (error) {
-      console.error('Error starting workout:', error);
-      Alert.alert('Error', 'Failed to start workout. Please try again.');
+      console.error("Error starting workout:", error);
+      Alert.alert("Error", "Failed to start workout. Please try again.");
     }
   };
 
@@ -197,15 +204,18 @@ export default function StartWorkoutScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.centerContainer, { backgroundColor: colors.background }]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   // Display logic handles both template and program day
-  const workoutName = programDay?.name || template?.name || 'Empty Workout';
-  const exerciseCount = programDay?.exercises.length || template?.exercises.length || 0;
+  const workoutName = programDay?.name || template?.name || "Empty Workout";
+  const exerciseCount =
+    programDay?.exercises.length || template?.exercises.length || 0;
 
   // Convert program day exercises to template-like format for display
   const exercises = programDay
@@ -226,60 +236,94 @@ export default function StartWorkoutScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <Pressable onPress={handleBack} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>
+              ←
+            </Text>
           </Pressable>
-          <Text style={[styles.title, { color: colors.text }]}>Start Workout</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            Start Workout
+          </Text>
         </View>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Workout Info Card */}
         <View
           style={[
             styles.infoCard,
-            { backgroundColor: colors.primaryLight, borderColor: colors.border },
+            {
+              backgroundColor: colors.primaryLight,
+              borderColor: colors.border,
+            },
           ]}
         >
-          <Text style={[styles.workoutName, { color: colors.text }]}>{workoutName}</Text>
+          <Text style={[styles.workoutName, { color: colors.text }]}>
+            {workoutName}
+          </Text>
           {template?.description && (
-            <Text style={[styles.workoutDescription, { color: colors.textSecondary }]}>
+            <Text
+              style={[
+                styles.workoutDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               {template.description}
             </Text>
           )}
           <Text style={[styles.workoutInfo, { color: colors.textSecondary }]}>
-            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
-            {exerciseCount > 0 && ' · Ready to begin'}
+            {exerciseCount} {exerciseCount === 1 ? "exercise" : "exercises"}
+            {exerciseCount > 0 && " · Ready to begin"}
           </Text>
         </View>
 
         {/* Exercise List */}
         {exerciseCount > 0 ? (
           <View style={styles.exerciseSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Exercises</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Exercises
+            </Text>
             {exercises.map((exercise, index) => (
               <View
                 key={exercise.id}
                 style={[
                   styles.exerciseCard,
-                  { backgroundColor: colors.backgroundSecondary, borderColor: colors.border },
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: colors.border,
+                  },
                 ]}
               >
                 <View style={styles.exerciseHeader}>
-                  <View style={[styles.exerciseNumber, { backgroundColor: colors.primary }]}>
+                  <View
+                    style={[
+                      styles.exerciseNumber,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Text style={styles.exerciseNumberText}>{index + 1}</Text>
                   </View>
                   <View style={styles.exerciseInfo}>
                     <Text style={[styles.exerciseName, { color: colors.text }]}>
                       {exercise.name}
                     </Text>
-                    {'sets' in exercise && exercise.sets && exercise.sets.length > 0 ? (
+                    {"sets" in exercise &&
+                    exercise.sets &&
+                    exercise.sets.length > 0 ? (
                       <View style={styles.individualSets}>
-                        {consolidateSets(
-                          exercise.sets,
-                          (weight) => displayWeight(weight)
+                        {consolidateSets(exercise.sets, (weight) =>
+                          displayWeight(weight)
                         ).map((setDescription, idx) => (
-                          <Text key={idx} style={[styles.setDetail, { color: colors.textSecondary }]}>
+                          <Text
+                            key={idx}
+                            style={[
+                              styles.setDetail,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             {setDescription}
                           </Text>
                         ))}
@@ -287,17 +331,32 @@ export default function StartWorkoutScreen() {
                     ) : (
                       <View style={styles.exerciseTargets}>
                         {exercise.targetSets && (
-                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          <Text
+                            style={[
+                              styles.targetText,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             {exercise.targetSets} sets
                           </Text>
                         )}
                         {exercise.targetReps && (
-                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          <Text
+                            style={[
+                              styles.targetText,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             × {exercise.targetReps} reps
                           </Text>
                         )}
                         {exercise.targetWeight && (
-                          <Text style={[styles.targetText, { color: colors.textSecondary }]}>
+                          <Text
+                            style={[
+                              styles.targetText,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             @ {displayWeight(exercise.targetWeight)}
                           </Text>
                         )}
@@ -306,7 +365,12 @@ export default function StartWorkoutScreen() {
                   </View>
                 </View>
                 {exercise.notes && (
-                  <Text style={[styles.exerciseNotes, { color: colors.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.exerciseNotes,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Note: {exercise.notes}
                   </Text>
                 )}
@@ -315,8 +379,12 @@ export default function StartWorkoutScreen() {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Exercises</Text>
-            <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No Exercises
+            </Text>
+            <Text
+              style={[styles.emptyDescription, { color: colors.textSecondary }]}
+            >
               Start your workout and add exercises as you go.
             </Text>
           </View>
@@ -325,11 +393,7 @@ export default function StartWorkoutScreen() {
 
       {/* Footer with Start Button */}
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <Button
-          title="Begin Workout"
-          onPress={handleStartWorkout}
-          fullWidth
-        />
+        <Button title="Begin Workout" onPress={handleStartWorkout} fullWidth />
         {exerciseCount === 0 && (
           <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
             You can add exercises during your workout
@@ -346,8 +410,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     paddingTop: Spacing.xl + 40,
@@ -356,19 +420,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.medium,
   },
   title: {
@@ -388,7 +452,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   workoutName: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.bold,
     marginBottom: Spacing.xs,
   },
@@ -413,19 +477,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   exerciseHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: Spacing.md,
   },
   exerciseNumber: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   exerciseNumberText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.bold,
   },
@@ -438,7 +502,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   exerciseTargets: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.sm,
   },
   targetText: {
@@ -454,22 +518,22 @@ const styles = StyleSheet.create({
   exerciseNotes: {
     fontSize: FontSizes.sm,
     marginTop: Spacing.sm,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   emptyState: {
-    alignItems: 'center',
-    paddingVertical: Spacing['3xl'],
+    alignItems: "center",
+    paddingVertical: Spacing["3xl"],
     paddingHorizontal: Spacing.xl,
   },
   emptyTitle: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.semibold,
     marginBottom: Spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyDescription: {
     fontSize: FontSizes.base,
-    textAlign: 'center',
+    textAlign: "center",
   },
   footer: {
     padding: Spacing.lg,
@@ -478,6 +542,6 @@ const styles = StyleSheet.create({
   },
   footerNote: {
     fontSize: FontSizes.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
