@@ -49,9 +49,6 @@ export const CREATE_WORKOUT_SESSIONS_TABLE = `
     id TEXT PRIMARY KEY NOT NULL,
     template_id TEXT,
     template_name TEXT,
-    program_id TEXT,
-    program_day_id TEXT,
-    program_day_name TEXT,
     name TEXT NOT NULL,
     start_time INTEGER NOT NULL,
     end_time INTEGER,
@@ -59,9 +56,7 @@ export const CREATE_WORKOUT_SESSIONS_TABLE = `
     notes TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL,
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE SET NULL,
-    FOREIGN KEY (program_day_id) REFERENCES program_days(id) ON DELETE SET NULL
+    FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL
   );
 `;
 
