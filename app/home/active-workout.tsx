@@ -37,7 +37,6 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -388,7 +387,9 @@ export default function ActiveWorkoutScreen() {
           </Text>
           {/* TODO Phase 8: Display program context if present */}
           {session.programDayName && (
-            <Text style={[styles.programBadge, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.programBadge, { color: colors.textSecondary }]}
+            >
               {session.programDayName}
             </Text>
           )}
@@ -503,7 +504,8 @@ export default function ActiveWorkoutScreen() {
       {/* Footer */}
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <Text style={[styles.footerHint, { color: colors.textSecondary }]}>
-          Tap exercise to log sets · Hold and drag to reorder · Swipe to reveal delete button
+          Tap exercise to log sets · Hold and drag to reorder · Swipe to reveal
+          delete button
         </Text>
       </View>
     </GestureHandlerRootView>
@@ -546,7 +548,7 @@ const styles = StyleSheet.create({
   },
   programBadge: {
     fontSize: FontSizes.sm,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   timer: {
     fontSize: FontSizes.xl,
