@@ -20,8 +20,8 @@ import {
   Spacing,
 } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { useExercise } from "@/src/features/workouts/hooks/useExercise";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 import { useDefaultRestTime } from "@/src/stores/settingsStore";
 import { WorkoutSet } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,7 +62,11 @@ function SetRow({
     updates: { reps?: number; weight?: number }
   ) => void;
   onRemove: (setId: string) => void;
-  onToggleComplete: (setId: string, completed: boolean, hasMoreSets: boolean) => void;
+  onToggleComplete: (
+    setId: string,
+    completed: boolean,
+    hasMoreSets: boolean
+  ) => void;
   colors: any;
   hasMoreSets: boolean;
 }) {
@@ -197,7 +201,9 @@ function SetRow({
           <Text
             style={[styles.previousSetText, { color: colors.textTertiary }]}
           >
-            {previousSet ? `${convertWeight(previousSet.weight)} × ${previousSet.reps}` : "—"}
+            {previousSet
+              ? `${convertWeight(previousSet.weight)} × ${previousSet.reps}`
+              : "—"}
           </Text>
         </View>
 
@@ -239,6 +245,7 @@ function SetRow({
 
         {/* Completion checkbox */}
         <Pressable
+          testID={`set-checkbox-${set.id}`} // Added for testing
           onPress={handleToggleComplete}
           style={[
             styles.checkbox,
@@ -391,11 +398,18 @@ export default function ExerciseDetailScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backButton}
+          testID="header-back-button"
+        >
           <Text style={[styles.backIcon, { color: colors.primary }]}>‹</Text>
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={[styles.exerciseName, { color: colors.text }]}>
+          <Text
+            style={[styles.exerciseName, { color: colors.text }]}
+            testID="exercise-name"
+          >
             {exercise.name}
           </Text>
           {bestPreviousSet && (
@@ -485,7 +499,9 @@ export default function ExerciseDetailScreen() {
               exercise.sets.map((set, index) => {
                 // Check if there are more incomplete sets after this one
                 const remainingSets = exercise.sets.slice(index + 1);
-                const hasMoreIncompleteSets = remainingSets.some(s => !s.completed);
+                const hasMoreIncompleteSets = remainingSets.some(
+                  (s) => !s.completed
+                );
 
                 return (
                   <SetRow
@@ -545,6 +561,7 @@ export default function ExerciseDetailScreen() {
           title="Done"
           onPress={() => router.back()}
           style={styles.doneButton}
+          testID="footer-done-button"
         />
       </View>
     </View>
