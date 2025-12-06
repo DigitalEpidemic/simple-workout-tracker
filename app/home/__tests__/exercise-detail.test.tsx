@@ -17,11 +17,6 @@ import ExerciseDetailScreen from "../exercise-detail";
 // Mocks
 // ----------------------------------------------------------------------------
 
-jest.mock("expo-router", () => ({
-  useRouter: jest.fn(),
-  useLocalSearchParams: jest.fn(),
-}));
-
 jest.mock("@/src/features/workouts/hooks/useExercise");
 jest.mock("@/src/hooks/useWeightDisplay");
 jest.mock("@/src/stores/settingsStore");
@@ -38,10 +33,6 @@ jest.mock("react-native-gesture-handler", () => {
     ),
   };
 });
-
-jest.mock("@expo/vector-icons", () => ({
-  Ionicons: "Ionicons",
-}));
 
 // ----------------------------------------------------------------------------
 // Test Data
