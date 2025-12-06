@@ -5,6 +5,13 @@ jest.mock("@expo/vector-icons", () => ({
   Ionicons: "Ionicons",
 }));
 
+// Mock specific native modules that cause issues in Jest
+jest.mock("react-native-keyboard-controller", () => ({
+  KeyboardAwareScrollView: ({ children, style }) => (
+    <div style={style}>{children}</div>
+  ),
+}));
+
 // Fix for Expo Winter runtime globals
 global.__ExpoImportMetaRegistry = {
   get: jest.fn(),

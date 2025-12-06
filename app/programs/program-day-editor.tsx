@@ -9,33 +9,26 @@
  * - Add notes to exercises
  */
 
-import React, { useEffect, useState } from 'react';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Input } from "@/components/ui/input";
+import { Colors, FontSizes, FontWeights, Spacing } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
-  StyleSheet,
-  View,
-  Text,
-  Alert,
-  Modal,
-  Pressable,
-} from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import {
-  updateProgramDayName,
   addProgramDayExercise,
-  updateProgramDayExercise,
   removeProgramDayExercise,
-} from '@/src/features/programs/api/programService';
-import * as programRepo from '@/src/lib/db/repositories/programs';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors, FontSizes, FontWeights, Spacing } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
-import { consolidateSets } from '@/src/lib/utils/formatters';
+  updateProgramDayExercise,
+  updateProgramDayName,
+} from "@/src/features/programs/api/programService";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
+import * as programRepo from "@/src/lib/db/repositories/programs";
+import { consolidateSets } from "@/src/lib/utils/formatters";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 interface SetForm {
   id?: string;
@@ -57,21 +50,26 @@ interface ExerciseForm {
 
 export default function ProgramDayEditorScreen() {
   const router = useRouter();
-  const { dayId } = useLocalSearchParams<{ dayId: string; programId: string }>();
-  const colorScheme = useColorScheme() ?? 'light';
+  const { dayId } = useLocalSearchParams<{
+    dayId: string;
+    programId: string;
+  }>();
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { convertWeight, parseWeight, getUnit } = useWeightDisplay();
 
-  const [dayName, setDayName] = useState('');
+  const [dayName, setDayName] = useState("");
   const [exercises, setExercises] = useState<ExerciseForm[]>([]);
   const [saving, setSaving] = useState(false);
 
   const [showExerciseModal, setShowExerciseModal] = useState(false);
-  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
-  const [exerciseFormName, setExerciseFormName] = useState('');
+  const [editingExerciseIndex, setEditingExerciseIndex] = useState<
+    number | null
+  >(null);
+  const [exerciseFormName, setExerciseFormName] = useState("");
   const [exerciseFormSets, setExerciseFormSets] = useState<SetForm[]>([]);
-  const [exerciseFormRestTime, setExerciseFormRestTime] = useState('');
-  const [exerciseFormNotes, setExerciseFormNotes] = useState('');
+  const [exerciseFormRestTime, setExerciseFormRestTime] = useState("");
+  const [exerciseFormNotes, setExerciseFormNotes] = useState("");
 
   useEffect(() => {
     if (dayId) {
@@ -92,7 +90,7 @@ export default function ProgramDayEditorScreen() {
             targetSets: ex.targetSets,
             targetReps: ex.targetReps,
             targetWeight: ex.targetWeight,
-            sets: ex.sets?.map(s => ({
+            sets: ex.sets?.map((s) => ({
               id: s.id,
               targetReps: s.targetReps,
               targetWeight: s.targetWeight,
@@ -103,17 +101,17 @@ export default function ProgramDayEditorScreen() {
         );
       }
     } catch (error) {
-      console.error('Error loading program day:', error);
-      Alert.alert('Error', 'Failed to load program day');
+      console.error("Error loading program day:", error);
+      Alert.alert("Error", "Failed to load program day");
     }
   };
 
   const handleAddExercise = () => {
     setEditingExerciseIndex(null);
-    setExerciseFormName('');
+    setExerciseFormName("");
     setExerciseFormSets([{ targetReps: undefined, targetWeight: undefined }]);
-    setExerciseFormRestTime('');
-    setExerciseFormNotes('');
+    setExerciseFormRestTime("");
+    setExerciseFormNotes("");
     setShowExerciseModal(true);
   };
 
@@ -122,33 +120,38 @@ export default function ProgramDayEditorScreen() {
     setEditingExerciseIndex(index);
     setExerciseFormName(exercise.exerciseName);
 
-    // Load sets if they exist, otherwise create a default set
     if (exercise.sets && exercise.sets.length > 0) {
       setExerciseFormSets(
-        exercise.sets.map(s => ({
+        exercise.sets.map((s) => ({
           id: s.id,
           targetReps: s.targetReps,
-          targetWeight: s.targetWeight ? convertWeight(s.targetWeight) : undefined,
+          targetWeight: s.targetWeight
+            ? convertWeight(s.targetWeight)
+            : undefined,
         }))
       );
     } else {
-      // For legacy exercises with uniform sets, create individual set entries
       const numSets = exercise.targetSets || 1;
       setExerciseFormSets(
         Array.from({ length: numSets }, () => ({
           targetReps: exercise.targetReps,
-          targetWeight: exercise.targetWeight ? convertWeight(exercise.targetWeight) : undefined,
+          targetWeight: exercise.targetWeight
+            ? convertWeight(exercise.targetWeight)
+            : undefined,
         }))
       );
     }
 
-    setExerciseFormRestTime(exercise.restSeconds?.toString() || '');
-    setExerciseFormNotes(exercise.notes || '');
+    setExerciseFormRestTime(exercise.restSeconds?.toString() || "");
+    setExerciseFormNotes(exercise.notes || "");
     setShowExerciseModal(true);
   };
 
   const handleAddSet = () => {
-    setExerciseFormSets([...exerciseFormSets, { targetReps: undefined, targetWeight: undefined }]);
+    setExerciseFormSets([
+      ...exerciseFormSets,
+      { targetReps: undefined, targetWeight: undefined },
+    ]);
   };
 
   const handleRemoveSet = (index: number) => {
@@ -157,32 +160,39 @@ export default function ProgramDayEditorScreen() {
     }
   };
 
-  const handleUpdateSet = (index: number, field: 'targetReps' | 'targetWeight', value: string) => {
+  const handleUpdateSet = (
+    index: number,
+    field: "targetReps" | "targetWeight",
+    value: string
+  ) => {
     const updated = [...exerciseFormSets];
-    if (field === 'targetReps') {
+    if (field === "targetReps") {
       updated[index].targetReps = value ? parseInt(value, 10) : undefined;
     } else {
-      updated[index].targetWeight = value ? parseWeight(parseFloat(value)) : undefined;
+      updated[index].targetWeight = value
+        ? parseWeight(parseFloat(value))
+        : undefined;
     }
     setExerciseFormSets(updated);
   };
 
   const handleSaveExercise = async () => {
     if (exerciseFormName.trim().length === 0) {
-      Alert.alert('Invalid Name', 'Exercise name cannot be empty');
+      Alert.alert("Invalid Name", "Exercise name cannot be empty");
       return;
     }
 
-    const restTime = exerciseFormRestTime ? parseInt(exerciseFormRestTime, 10) : undefined;
+    const restTime = exerciseFormRestTime
+      ? parseInt(exerciseFormRestTime, 10)
+      : undefined;
 
     try {
       if (editingExerciseIndex !== null) {
-        // Update existing exercise
         const exercise = exercises[editingExerciseIndex];
         if (exercise.id) {
           await updateProgramDayExercise(exercise.id, {
             exerciseName: exerciseFormName.trim(),
-            sets: exerciseFormSets as any, // Type will be handled by API layer
+            sets: exerciseFormSets as any,
             restSeconds: restTime,
             notes: exerciseFormNotes.trim() || undefined,
           });
@@ -201,7 +211,6 @@ export default function ProgramDayEditorScreen() {
         };
         setExercises(updated);
       } else {
-        // Add new exercise
         const newExercise = await addProgramDayExercise(dayId!, {
           exerciseName: exerciseFormName.trim(),
           sets: exerciseFormSets,
@@ -224,21 +233,21 @@ export default function ProgramDayEditorScreen() {
 
       setShowExerciseModal(false);
     } catch (error) {
-      console.error('Error saving exercise:', error);
-      Alert.alert('Error', 'Failed to save exercise');
+      console.error("Error saving exercise:", error);
+      Alert.alert("Error", "Failed to save exercise");
     }
   };
 
   const handleRemoveExercise = (index: number) => {
     const exercise = exercises[index];
     Alert.alert(
-      'Remove Exercise',
+      "Remove Exercise",
       `Remove "${exercise.exerciseName}" from this day?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Remove',
-          style: 'destructive',
+          text: "Remove",
+          style: "destructive",
           onPress: async () => {
             try {
               if (exercise.id) {
@@ -249,8 +258,8 @@ export default function ProgramDayEditorScreen() {
                 .map((ex, idx) => ({ ...ex, order: idx }));
               setExercises(updated);
             } catch (error) {
-              console.error('Error removing exercise:', error);
-              Alert.alert('Error', 'Failed to remove exercise');
+              console.error("Error removing exercise:", error);
+              Alert.alert("Error", "Failed to remove exercise");
             }
           },
         },
@@ -260,18 +269,18 @@ export default function ProgramDayEditorScreen() {
 
   const handleSaveDay = async () => {
     if (dayName.trim().length === 0) {
-      Alert.alert('Invalid Name', 'Day name cannot be empty');
+      Alert.alert("Invalid Name", "Day name cannot be empty");
       return;
     }
 
     try {
       setSaving(true);
       await updateProgramDayName(dayId!, dayName.trim());
-      Alert.alert('Success', 'Program day updated');
+      Alert.alert("Success", "Program day updated");
       router.back();
     } catch (error) {
-      console.error('Error saving day:', error);
-      Alert.alert('Error', 'Failed to save program day');
+      console.error("Error saving day:", error);
+      Alert.alert("Error", "Failed to save program day");
     } finally {
       setSaving(false);
     }
@@ -283,7 +292,9 @@ export default function ProgramDayEditorScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>
+              ←
+            </Text>
           </Pressable>
           <View style={styles.titleContainer}>
             <Text style={[styles.title, { color: colors.text }]}>Edit Day</Text>
@@ -297,78 +308,89 @@ export default function ProgramDayEditorScreen() {
         keyboardShouldPersistTaps="handled"
         bottomOffset={100}
       >
-          <View>
-            {/* Day Name */}
-            <View style={styles.section}>
-              <Input
-                label="Day Name"
-                placeholder="e.g., Upper Body"
-                value={dayName}
-                onChangeText={setDayName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            {/* Exercises */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>Exercises</ThemedText>
-                <Pressable onPress={handleAddExercise}>
-                  <ThemedText style={[styles.addButton, { color: colors.tint }]}>
-                    + Add Exercise
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              {exercises.length === 0 ? (
-                <ThemedText style={styles.emptyText}>
-                  No exercises yet. Add your first exercise to get started.
-                </ThemedText>
-              ) : (
-                exercises.map((exercise, index) => (
-                  <View key={exercise.id || index} style={styles.exerciseCard}>
-                    <Pressable style={styles.exerciseContent} onPress={() => handleEditExercise(index)}>
-                      <ThemedText style={styles.exerciseName}>{exercise.exerciseName}</ThemedText>
-
-                      {/* Show individual sets if they exist */}
-                      {exercise.sets && exercise.sets.length > 0 ? (
-                        <View style={styles.setsDisplay}>
-                          {consolidateSets(
-                            exercise.sets,
-                            (weight) => `${convertWeight(weight)} ${getUnit()}`
-                          ).map((setDescription, idx) => (
-                            <ThemedText key={idx} style={styles.exerciseTargets}>
-                              {setDescription}
-                            </ThemedText>
-                          ))}
-                        </View>
-                      ) : (
-                        /* Fallback to legacy uniform sets display */
-                        (exercise.targetSets || exercise.targetReps || exercise.targetWeight) && (
-                          <ThemedText style={styles.exerciseTargets}>
-                            {exercise.targetSets && `${exercise.targetSets} sets`}
-                            {exercise.targetSets && exercise.targetReps && ' × '}
-                            {exercise.targetReps && `${exercise.targetReps} reps`}
-                            {exercise.targetWeight &&
-                              ` @ ${convertWeight(exercise.targetWeight)} ${getUnit()}`}
-                          </ThemedText>
-                        )
-                      )}
-
-                      {exercise.restSeconds && (
-                        <ThemedText style={styles.exerciseRest}>
-                          Rest: {exercise.restSeconds}s
-                        </ThemedText>
-                      )}
-                    </Pressable>
-                    <Pressable onPress={() => handleRemoveExercise(index)} style={styles.deleteButton}>
-                      <IconSymbol name="trash" size={20} color={colors.error} />
-                    </Pressable>
-                  </View>
-                ))
-              )}
-            </View>
+        <View>
+          {/* Day Name */}
+          <View style={styles.section}>
+            <Input
+              label="Day Name"
+              placeholder="e.g., Upper Body"
+              value={dayName}
+              onChangeText={setDayName}
+              autoCapitalize="words"
+            />
           </View>
+
+          {/* Exercises */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <ThemedText style={styles.sectionTitle}>Exercises</ThemedText>
+              <Pressable onPress={handleAddExercise}>
+                <ThemedText style={[styles.addButton, { color: colors.tint }]}>
+                  + Add Exercise
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            {exercises.length === 0 ? (
+              <ThemedText style={styles.emptyText}>
+                No exercises yet. Add your first exercise to get started.
+              </ThemedText>
+            ) : (
+              exercises.map((exercise, index) => (
+                <View key={exercise.id || index} style={styles.exerciseCard}>
+                  <Pressable
+                    style={styles.exerciseContent}
+                    onPress={() => handleEditExercise(index)}
+                  >
+                    <ThemedText style={styles.exerciseName}>
+                      {exercise.exerciseName}
+                    </ThemedText>
+
+                    {exercise.sets && exercise.sets.length > 0 ? (
+                      <View style={styles.setsDisplay}>
+                        {consolidateSets(
+                          exercise.sets,
+                          (weight) => `${convertWeight(weight)} ${getUnit()}`
+                        ).map((setDescription, idx) => (
+                          <ThemedText key={idx} style={styles.exerciseTargets}>
+                            {setDescription}
+                          </ThemedText>
+                        ))}
+                      </View>
+                    ) : (
+                      (exercise.targetSets ||
+                        exercise.targetReps ||
+                        exercise.targetWeight) && (
+                        <ThemedText style={styles.exerciseTargets}>
+                          {exercise.targetSets && `${exercise.targetSets} sets`}
+                          {exercise.targetSets && exercise.targetReps && " × "}
+                          {exercise.targetReps && `${exercise.targetReps} reps`}
+                          {exercise.targetWeight &&
+                            ` @ ${convertWeight(
+                              exercise.targetWeight
+                            )} ${getUnit()}`}
+                        </ThemedText>
+                      )
+                    )}
+
+                    {exercise.restSeconds && (
+                      <ThemedText style={styles.exerciseRest}>
+                        Rest: {exercise.restSeconds}s
+                      </ThemedText>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleRemoveExercise(index)}
+                    style={styles.deleteButton}
+                    testID="delete-exercise-btn"
+                  >
+                    <IconSymbol name="trash" size={20} color={colors.error} />
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
 
         {/* Save Button */}
         <View style={[styles.footer, { backgroundColor: colors.background }]}>
@@ -394,10 +416,12 @@ export default function ProgramDayEditorScreen() {
               <ThemedText style={styles.modalCancel}>Cancel</ThemedText>
             </Pressable>
             <ThemedText style={styles.modalTitle}>
-              {editingExerciseIndex !== null ? 'Edit Exercise' : 'Add Exercise'}
+              {editingExerciseIndex !== null ? "Edit Exercise" : "Add Exercise"}
             </ThemedText>
             <Pressable onPress={handleSaveExercise}>
-              <ThemedText style={[styles.modalSave, { color: colors.tint }]}>Save</ThemedText>
+              <ThemedText style={[styles.modalSave, { color: colors.tint }]}>
+                Save
+              </ThemedText>
             </Pressable>
           </View>
 
@@ -421,7 +445,9 @@ export default function ProgramDayEditorScreen() {
               <View style={styles.setsSectionHeader}>
                 <ThemedText style={styles.setsLabel}>Sets</ThemedText>
                 <Pressable onPress={handleAddSet}>
-                  <ThemedText style={[styles.addSetButton, { color: colors.tint }]}>
+                  <ThemedText
+                    style={[styles.addSetButton, { color: colors.tint }]}
+                  >
                     + Add Set
                   </ThemedText>
                 </Pressable>
@@ -435,8 +461,10 @@ export default function ProgramDayEditorScreen() {
                       <Input
                         label="Reps"
                         placeholder="10"
-                        value={set.targetReps?.toString() || ''}
-                        onChangeText={(value) => handleUpdateSet(index, 'targetReps', value)}
+                        value={set.targetReps?.toString() || ""}
+                        onChangeText={(value) =>
+                          handleUpdateSet(index, "targetReps", value)
+                        }
                         keyboardType="number-pad"
                       />
                     </View>
@@ -444,8 +472,10 @@ export default function ProgramDayEditorScreen() {
                       <Input
                         label={getUnit()}
                         placeholder="225"
-                        value={set.targetWeight?.toString() || ''}
-                        onChangeText={(value) => handleUpdateSet(index, 'targetWeight', value)}
+                        value={set.targetWeight?.toString() || ""}
+                        onChangeText={(value) =>
+                          handleUpdateSet(index, "targetWeight", value)
+                        }
                         keyboardType="decimal-pad"
                       />
                     </View>
@@ -454,6 +484,7 @@ export default function ProgramDayEditorScreen() {
                     <Pressable
                       onPress={() => handleRemoveSet(index)}
                       style={styles.removeSetButton}
+                      testID="remove-set-btn"
                     >
                       <IconSymbol name="trash" size={18} color={colors.error} />
                     </Pressable>
@@ -495,23 +526,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.medium,
   },
   titleContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: FontSizes.xl,
@@ -528,9 +559,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
@@ -544,15 +575,15 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: FontSizes.sm,
     opacity: 0.6,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: Spacing.lg,
   },
   exerciseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     marginBottom: Spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: "rgba(0,0,0,0.05)",
     borderRadius: 8,
   },
   exerciseContent: {
@@ -579,24 +610,24 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopColor: "rgba(0,0,0,0.1)",
   },
   modalContainer: {
     flex: 1,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   modalTitle: {
     fontSize: FontSizes.lg,
@@ -617,7 +648,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   halfInput: {
@@ -628,9 +659,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   setsSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.sm,
   },
   setsLabel: {
@@ -642,8 +673,8 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.semibold,
   },
   setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Spacing.sm,
     gap: 8,
   },
@@ -651,11 +682,11 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontWeight: FontWeights.semibold,
     width: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   setInputs: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   setInputHalf: {
