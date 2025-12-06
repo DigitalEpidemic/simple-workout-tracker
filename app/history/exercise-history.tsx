@@ -9,30 +9,29 @@
  * - Show sets breakdown for each workout
  */
 
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
   ActivityIndicator,
   Pressable,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useWeightDisplay } from '@/src/hooks/useWeightDisplay';
 import {
+  BorderRadius,
   Colors,
-  Spacing,
   FontSizes,
   FontWeights,
-  BorderRadius,
-} from '@/constants/theme';
-import { useExerciseHistory } from '@/src/features/history/hooks/useExerciseHistory';
-import { ExercisePerformance } from '@/src/features/history/api/exerciseHistoryService';
-import { WorkoutSet } from '@/types';
+  Spacing,
+} from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { ExercisePerformance } from "@/src/features/history/api/exerciseHistoryService";
+import { useExerciseHistory } from "@/src/features/history/hooks/useExerciseHistory";
+import { useWeightDisplay } from "@/src/hooks/useWeightDisplay";
 
 /**
  * Individual workout performance card
@@ -52,20 +51,20 @@ function WorkoutPerformanceCard({
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const options: Intl.DateTimeFormatOptions = {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString("en-US", options);
   };
 
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp);
     const options: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
+      hour: "numeric",
+      minute: "2-digit",
     };
-    return date.toLocaleTimeString('en-US', options);
+    return date.toLocaleTimeString("en-US", options);
   };
 
   return (
@@ -93,12 +92,12 @@ function WorkoutPerformanceCard({
             </Text>
           )}
           <Text style={[styles.workoutDate, { color: colors.textSecondary }]}>
-            {formatDate(performance.workoutDate)} at{' '}
+            {formatDate(performance.workoutDate)} at{" "}
             {formatTime(performance.workoutDate)}
           </Text>
         </View>
         <Ionicons
-          name={expanded ? 'chevron-up' : 'chevron-down'}
+          name={expanded ? "chevron-up" : "chevron-down"}
           size={20}
           color={colors.textSecondary}
         />
@@ -124,7 +123,9 @@ function WorkoutPerformanceCard({
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.text }]}>
-            {Math.round(convertWeight(performance.totalVolume)).toLocaleString()}
+            {Math.round(
+              convertWeight(performance.totalVolume)
+            ).toLocaleString()}
           </Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
             volume ({getUnit()})
@@ -145,26 +146,28 @@ function WorkoutPerformanceCard({
         <View
           style={[
             styles.setsContainer,
-            { borderTopColor: colors.border, backgroundColor: colors.background },
+            {
+              borderTopColor: colors.border,
+              backgroundColor: colors.background,
+            },
           ]}
         >
-          <Text
-            style={[styles.setsHeader, { color: colors.textSecondary }]}
-          >
+          <Text style={[styles.setsHeader, { color: colors.textSecondary }]}>
             Sets Breakdown
           </Text>
           {performance.sets.map((set, index) => (
             <View key={set.id} style={styles.setRow}>
-              <Text
-                style={[styles.setNumber, { color: colors.textTertiary }]}
-              >
+              <Text style={[styles.setNumber, { color: colors.textTertiary }]}>
                 Set {index + 1}
               </Text>
               <Text style={[styles.setText, { color: colors.text }]}>
                 {displayWeight(set.weight)} × {set.reps} reps
               </Text>
               <Text style={[styles.setVolume, { color: colors.textSecondary }]}>
-                {Math.round(convertWeight(set.weight * set.reps)).toLocaleString()} {getUnit()}
+                {Math.round(
+                  convertWeight(set.weight * set.reps)
+                ).toLocaleString()}{" "}
+                {getUnit()}
               </Text>
             </View>
           ))}
@@ -203,14 +206,14 @@ function StatisticsCard({
   const { convertWeight, getUnit } = useWeightDisplay();
 
   const formatDate = (timestamp?: number): string => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return "Never";
     const date = new Date(timestamp);
     const options: Intl.DateTimeFormatOptions = {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString("en-US", options);
   };
 
   return (
@@ -263,7 +266,9 @@ function StatisticsCard({
       </View>
 
       <View style={styles.lastPerformedContainer}>
-        <Text style={[styles.lastPerformedLabel, { color: colors.textSecondary }]}>
+        <Text
+          style={[styles.lastPerformedLabel, { color: colors.textSecondary }]}
+        >
           Last Performed:
         </Text>
         <Text style={[styles.lastPerformedValue, { color: colors.text }]}>
@@ -277,7 +282,7 @@ function StatisticsCard({
 export default function ExerciseHistoryScreen() {
   const router = useRouter();
   const { exerciseName } = useLocalSearchParams<{ exerciseName: string }>();
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
   const { performances, statistics, loading, error } = useExerciseHistory(
@@ -316,7 +321,9 @@ export default function ExerciseHistoryScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerContent}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={[styles.backButtonText, { color: colors.primary }]}>←</Text>
+            <Text style={[styles.backButtonText, { color: colors.primary }]}>
+              ←
+            </Text>
           </Pressable>
           <View style={styles.headerTitleContainer}>
             <Text style={[styles.title, { color: colors.text }]}>
@@ -382,8 +389,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: Spacing.lg,
   },
   header: {
@@ -393,23 +400,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
   backButtonText: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.medium,
   },
   headerTitleContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   title: {
@@ -437,28 +444,28 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.bold,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.md,
   },
   gridItem: {
     flex: 1,
-    minWidth: '45%',
-    alignItems: 'center',
+    minWidth: "45%",
+    alignItems: "center",
     gap: Spacing.xs,
   },
   gridValue: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     fontWeight: FontWeights.bold,
   },
   gridLabel: {
     fontSize: FontSizes.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
   lastPerformedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.xs,
     paddingTop: Spacing.sm,
   },
@@ -479,12 +486,12 @@ const styles = StyleSheet.create({
   performanceCard: {
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   performanceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: Spacing.md,
   },
   performanceHeaderLeft: {
@@ -498,20 +505,20 @@ const styles = StyleSheet.create({
   programDayName: {
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.medium,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   workoutDate: {
     fontSize: FontSizes.sm,
   },
   statsSummary: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
     gap: Spacing.sm,
   },
   statItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     gap: Spacing.xs,
   },
   statValue: {
@@ -532,9 +539,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: Spacing.xs,
   },
   setNumber: {
@@ -549,9 +556,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
   },
   viewWorkoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: Spacing.md,
     borderTopWidth: 1,
     gap: Spacing.xs,
@@ -561,21 +568,21 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.semibold,
   },
   emptyState: {
-    alignItems: 'center',
-    paddingVertical: Spacing['3xl'],
+    alignItems: "center",
+    paddingVertical: Spacing["3xl"],
     gap: Spacing.md,
   },
   emptyText: {
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.medium,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptySubtext: {
     fontSize: FontSizes.base,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorText: {
     fontSize: FontSizes.lg,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

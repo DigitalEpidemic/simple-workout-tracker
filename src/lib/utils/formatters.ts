@@ -9,8 +9,8 @@
  * @param unit - Target display unit ('lbs' or 'kg')
  * @returns Formatted weight string with unit
  */
-export function formatWeight(weight: number, unit: 'lbs' | 'kg'): string {
-  if (unit === 'kg') {
+export function formatWeight(weight: number, unit: "lbs" | "kg"): string {
+  if (unit === "kg") {
     // Convert lbs to kg (1 lb = 0.453592 kg)
     const kg = weight * 0.453592;
     return `${kg.toFixed(1)} kg`;
@@ -34,7 +34,7 @@ export function formatDuration(seconds: number): string {
   if (minutes > 0) parts.push(`${minutes}m`);
   if (secs > 0 && hours === 0) parts.push(`${secs}s`);
 
-  return parts.join(' ') || '0s';
+  return parts.join(" ") || "0s";
 }
 
 /**
@@ -45,10 +45,10 @@ export function formatDuration(seconds: number): string {
  */
 export function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -60,12 +60,12 @@ export function formatDate(timestamp: number): string {
  */
 export function formatDateTime(timestamp: number): string {
   const date = new Date(timestamp);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -77,9 +77,9 @@ export function formatDateTime(timestamp: number): string {
  */
 export function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -96,14 +96,26 @@ export function formatRelativeDate(timestamp: number): string {
   yesterday.setDate(yesterday.getDate() - 1);
 
   // Reset time to midnight for comparison
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  const dateOnly = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+  const todayOnly = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  const yesterdayOnly = new Date(
+    yesterday.getFullYear(),
+    yesterday.getMonth(),
+    yesterday.getDate()
+  );
 
   if (dateOnly.getTime() === todayOnly.getTime()) {
-    return 'Today';
+    return "Today";
   } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-    return 'Yesterday';
+    return "Yesterday";
   } else {
     const diffTime = todayOnly.getTime() - dateOnly.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -112,13 +124,13 @@ export function formatRelativeDate(timestamp: number): string {
       return `${diffDays} days ago`;
     } else if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+      return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
     } else if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return months === 1 ? '1 month ago' : `${months} months ago`;
+      return months === 1 ? "1 month ago" : `${months} months ago`;
     } else {
       const years = Math.floor(diffDays / 365);
-      return years === 1 ? '1 year ago' : `${years} years ago`;
+      return years === 1 ? "1 year ago" : `${years} years ago`;
     }
   }
 }
@@ -130,7 +142,7 @@ export function formatRelativeDate(timestamp: number): string {
  * @returns Formatted number string
  */
 export function formatNumber(num: number): string {
-  return num.toLocaleString('en-US');
+  return num.toLocaleString("en-US");
 }
 
 /**
@@ -149,7 +161,7 @@ export function formatNumber(num: number): string {
  * Output: ["Set 1-2: 10 reps @ 100 lbs", "Set 3: 8 reps @ 120 lbs"]
  */
 export function consolidateSets(
-  sets: Array<{ targetReps?: number; targetWeight?: number }>,
+  sets: { targetReps?: number; targetWeight?: number }[],
   formatWeight: (weight: number) => string
 ): string[] {
   if (sets.length === 0) return [];
@@ -162,20 +174,20 @@ export function consolidateSets(
     const nextSet = sets[i + 1];
 
     // Check if we should continue the current range
-    const shouldContinueRange = nextSet &&
+    const shouldContinueRange =
+      nextSet &&
       currentSet.targetReps === nextSet.targetReps &&
       currentSet.targetWeight === nextSet.targetWeight;
 
     if (!shouldContinueRange) {
       // End of range - format and add to results
-      const setRange = rangeStart === i
-        ? `Set ${i + 1}`
-        : `Set ${rangeStart + 1}-${i + 1}`;
+      const setRange =
+        rangeStart === i ? `Set ${i + 1}` : `Set ${rangeStart + 1}-${i + 1}`;
 
-      const reps = currentSet.targetReps ?? '?';
+      const reps = currentSet.targetReps ?? "?";
       const weight = currentSet.targetWeight
         ? formatWeight(currentSet.targetWeight)
-        : '?';
+        : "?";
 
       consolidated.push(`${setRange}: ${reps} reps @ ${weight}`);
       rangeStart = i + 1;

@@ -9,15 +9,15 @@
  *       Phase 4.6 will implement user settings for weight unit toggle (lbs/kg).
  */
 
-import { WorkoutTemplate, ExerciseTemplate } from '@/types';
 import {
+  createTemplateWithExercises,
+  deleteTemplate,
   getAllTemplates,
   getTemplateById,
-  createTemplateWithExercises,
   updateTemplateWithExercises,
-  deleteTemplate,
-} from '@/src/lib/db/repositories/templates';
-import { generateId } from '@/src/lib/utils/id';
+} from "@/src/lib/db/repositories/templates";
+import { generateId } from "@/src/lib/utils/id";
+import { ExerciseTemplate, WorkoutTemplate } from "@/types";
 
 /**
  * Fetch all workout templates
@@ -34,7 +34,9 @@ export async function fetchAllTemplates(): Promise<WorkoutTemplate[]> {
  * @param id - Template ID
  * @returns Promise that resolves to the template or null
  */
-export async function fetchTemplateById(id: string): Promise<WorkoutTemplate | null> {
+export async function fetchTemplateById(
+  id: string
+): Promise<WorkoutTemplate | null> {
   return getTemplateById(id, true);
 }
 
@@ -49,13 +51,13 @@ export async function fetchTemplateById(id: string): Promise<WorkoutTemplate | n
 export async function createNewTemplate(
   name: string,
   description: string | undefined,
-  exercises: Array<{
+  exercises: {
     name: string;
     targetSets?: number;
     targetReps?: number;
     targetWeight?: number;
     notes?: string;
-  }>
+  }[]
 ): Promise<WorkoutTemplate> {
   const now = Date.now();
   const templateId = generateId();
@@ -101,14 +103,14 @@ export async function updateExistingTemplate(
   id: string,
   name: string,
   description: string | undefined,
-  exercises: Array<{
+  exercises: {
     id?: string; // Existing exercise ID (if editing)
     name: string;
     targetSets?: number;
     targetReps?: number;
     targetWeight?: number;
     notes?: string;
-  }>
+  }[]
 ): Promise<WorkoutTemplate> {
   const existing = await getTemplateById(id, false);
 
@@ -167,15 +169,15 @@ export function validateTemplateName(name: string): string | null {
   const trimmed = name.trim();
 
   if (!trimmed) {
-    return 'Template name is required';
+    return "Template name is required";
   }
 
   if (trimmed.length < 2) {
-    return 'Template name must be at least 2 characters';
+    return "Template name must be at least 2 characters";
   }
 
   if (trimmed.length > 50) {
-    return 'Template name must be less than 50 characters';
+    return "Template name must be less than 50 characters";
   }
 
   return null;
@@ -191,15 +193,15 @@ export function validateExerciseName(name: string): string | null {
   const trimmed = name.trim();
 
   if (!trimmed) {
-    return 'Exercise name is required';
+    return "Exercise name is required";
   }
 
   if (trimmed.length < 2) {
-    return 'Exercise name must be at least 2 characters';
+    return "Exercise name must be at least 2 characters";
   }
 
   if (trimmed.length > 50) {
-    return 'Exercise name must be less than 50 characters';
+    return "Exercise name must be less than 50 characters";
   }
 
   return null;
@@ -219,15 +221,15 @@ export function validateExerciseTargets(
   targetWeight?: number
 ): string | null {
   if (targetSets !== undefined && (targetSets < 1 || targetSets > 20)) {
-    return 'Target sets must be between 1 and 20';
+    return "Target sets must be between 1 and 20";
   }
 
   if (targetReps !== undefined && (targetReps < 1 || targetReps > 100)) {
-    return 'Target reps must be between 1 and 100';
+    return "Target reps must be between 1 and 100";
   }
 
   if (targetWeight !== undefined && targetWeight < 0) {
-    return 'Target weight must be positive';
+    return "Target weight must be positive";
   }
 
   return null;

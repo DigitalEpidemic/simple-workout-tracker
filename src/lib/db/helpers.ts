@@ -5,8 +5,8 @@
  * These helpers wrap the raw SQLite API with more convenient interfaces.
  */
 
-import * as SQLite from 'expo-sqlite';
-import { getDatabase } from './index';
+import * as SQLite from "expo-sqlite";
+import { getDatabase } from "./index";
 
 /**
  * Execute a SELECT query and return all matching rows
@@ -109,7 +109,7 @@ export async function getAll<T>(sql: string, params?: any[]): Promise<T[]> {
  * ]);
  */
 export async function transaction(
-  statements: Array<{ sql: string; params?: any[] }>
+  statements: { sql: string; params?: any[] }[]
 ): Promise<void> {
   const db = await getDatabase();
 

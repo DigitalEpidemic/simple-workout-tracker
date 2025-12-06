@@ -5,16 +5,23 @@
  * Handles validation and orchestration of program operations.
  */
 
-import { Program, ProgramDay, ProgramDayExercise, ProgramDayExerciseSet } from '@/types';
-import * as programRepo from '@/src/lib/db/repositories/programs';
-import { generateId } from '@/src/lib/utils/id';
+import * as programRepo from "@/src/lib/db/repositories/programs";
+import { generateId } from "@/src/lib/utils/id";
+import {
+  Program,
+  ProgramDay,
+  ProgramDayExercise,
+  ProgramDayExerciseSet,
+} from "@/types";
 
 /**
  * Fetch all programs
  *
  * @returns Promise that resolves to array of programs (without full day/exercise data)
  */
-export async function fetchAllPrograms(): Promise<(Omit<Program, 'days'> & { dayCount: number })[]> {
+export async function fetchAllPrograms(): Promise<
+  (Omit<Program, "days"> & { dayCount: number })[]
+> {
   return programRepo.getAllPrograms();
 }
 
@@ -92,7 +99,7 @@ export async function activateProgram(id: string): Promise<void> {
   // Verify program has at least one day
   const program = await programRepo.getProgramWithDaysAndExercises(id);
   if (!program || program.days.length === 0) {
-    throw new Error('Cannot activate program with no days');
+    throw new Error("Cannot activate program with no days");
   }
 
   await programRepo.setActiveProgram(id);
@@ -246,7 +253,7 @@ export async function addProgramDayExercise(
     targetSets?: number;
     targetReps?: number;
     targetWeight?: number;
-    sets?: Array<{ targetReps?: number; targetWeight?: number }>;
+    sets?: { targetReps?: number; targetWeight?: number }[];
     restSeconds?: number;
     notes?: string;
   }
@@ -255,7 +262,9 @@ export async function addProgramDayExercise(
   const exerciseId = generateId();
 
   // Get existing exercises to determine order
-  const existingExercises = await programRepo.getProgramDayExercisesByDayId(dayId);
+  const existingExercises = await programRepo.getProgramDayExercisesByDayId(
+    dayId
+  );
   const order = existingExercises.length;
 
   const exercise: ProgramDayExercise = {
@@ -276,15 +285,17 @@ export async function addProgramDayExercise(
 
   // Create individual sets if provided
   if (exerciseData.sets && exerciseData.sets.length > 0) {
-    const sets: ProgramDayExerciseSet[] = exerciseData.sets.map((setData, index) => ({
-      id: generateId(),
-      programDayExerciseId: exerciseId,
-      setNumber: index + 1,
-      targetReps: setData.targetReps,
-      targetWeight: setData.targetWeight,
-      createdAt: now,
-      updatedAt: now,
-    }));
+    const sets: ProgramDayExerciseSet[] = exerciseData.sets.map(
+      (setData, index) => ({
+        id: generateId(),
+        programDayExerciseId: exerciseId,
+        setNumber: index + 1,
+        targetReps: setData.targetReps,
+        targetWeight: setData.targetWeight,
+        createdAt: now,
+        updatedAt: now,
+      })
+    );
 
     for (const set of sets) {
       await programRepo.createProgramDayExerciseSet(set);
@@ -304,7 +315,9 @@ export async function addProgramDayExercise(
  */
 export async function updateProgramDayExercise(
   exerciseId: string,
-  updates: Partial<Omit<ProgramDayExercise, 'id' | 'programDayId' | 'createdAt' | 'updatedAt'>>
+  updates: Partial<
+    Omit<ProgramDayExercise, "id" | "programDayId" | "createdAt" | "updatedAt">
+  >
 ): Promise<void> {
   const now = Date.now();
 
@@ -352,12 +365,16 @@ export async function removeProgramDayExercise(
   await programRepo.deleteProgramDayExercise(exerciseId);
 
   // Get remaining exercises
-  const remainingExercises = await programRepo.getProgramDayExercisesByDayId(dayId);
+  const remainingExercises = await programRepo.getProgramDayExercisesByDayId(
+    dayId
+  );
 
   // Reorder remaining exercises to fill the gap
   for (let i = 0; i < remainingExercises.length; i++) {
     if (remainingExercises[i].order !== i) {
-      await programRepo.updateProgramDayExercise(remainingExercises[i].id, { order: i });
+      await programRepo.updateProgramDayExercise(remainingExercises[i].id, {
+        order: i,
+      });
     }
   }
 }

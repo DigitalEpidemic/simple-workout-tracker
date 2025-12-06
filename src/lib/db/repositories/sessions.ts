@@ -5,9 +5,9 @@
  * Handles all CRUD operations for active and completed workouts.
  */
 
-import { WorkoutSession, Exercise } from '@/types';
-import { query, execute, getOne, transaction } from '../helpers';
-import { getAllSetsBySessionId } from './sets';
+import { Exercise, WorkoutSession } from "@/types";
+import { execute, getOne, query, transaction } from "../helpers";
+import { getAllSetsBySessionId } from "./sets";
 
 /**
  * Database row types (snake_case from SQLite)
@@ -94,8 +94,8 @@ export async function getAllSessions(
   limit?: number
 ): Promise<WorkoutSession[]> {
   const sql = limit
-    ? 'SELECT * FROM workout_sessions ORDER BY start_time DESC LIMIT ?'
-    : 'SELECT * FROM workout_sessions ORDER BY start_time DESC';
+    ? "SELECT * FROM workout_sessions ORDER BY start_time DESC LIMIT ?"
+    : "SELECT * FROM workout_sessions ORDER BY start_time DESC";
 
   const params = limit ? [limit] : undefined;
   const rows = await query<WorkoutSessionRow>(sql, params);
@@ -125,7 +125,7 @@ export async function getSessionById(
   includeExercises: boolean = true
 ): Promise<WorkoutSession | null> {
   const row = await getOne<WorkoutSessionRow>(
-    'SELECT * FROM workout_sessions WHERE id = ?',
+    "SELECT * FROM workout_sessions WHERE id = ?",
     [id]
   );
 
@@ -133,9 +133,7 @@ export async function getSessionById(
     return null;
   }
 
-  const exercises = includeExercises
-    ? await getExercisesBySessionId(id)
-    : [];
+  const exercises = includeExercises ? await getExercisesBySessionId(id) : [];
 
   return rowToWorkoutSession(row, exercises);
 }
@@ -150,7 +148,7 @@ export async function getActiveSession(
   includeExercises: boolean = true
 ): Promise<WorkoutSession | null> {
   const row = await getOne<WorkoutSessionRow>(
-    'SELECT * FROM workout_sessions WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1'
+    "SELECT * FROM workout_sessions WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1"
   );
 
   if (!row) {
@@ -176,8 +174,8 @@ export async function getCompletedSessions(
   limit?: number
 ): Promise<WorkoutSession[]> {
   const sql = limit
-    ? 'SELECT * FROM workout_sessions WHERE end_time IS NOT NULL ORDER BY start_time DESC LIMIT ?'
-    : 'SELECT * FROM workout_sessions WHERE end_time IS NOT NULL ORDER BY start_time DESC';
+    ? "SELECT * FROM workout_sessions WHERE end_time IS NOT NULL ORDER BY start_time DESC LIMIT ?"
+    : "SELECT * FROM workout_sessions WHERE end_time IS NOT NULL ORDER BY start_time DESC";
 
   const params = limit ? [limit] : undefined;
   const rows = await query<WorkoutSessionRow>(sql, params);
@@ -209,7 +207,7 @@ export async function getSessionsByDateRange(
   includeExercises: boolean = true
 ): Promise<WorkoutSession[]> {
   const rows = await query<WorkoutSessionRow>(
-    'SELECT * FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC',
+    "SELECT * FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC",
     [startDate, endDate]
   );
 
@@ -233,7 +231,7 @@ export async function getSessionsByDateRange(
  * @returns Promise that resolves when session is created
  */
 export async function createSession(
-  session: Omit<WorkoutSession, 'exercises'>
+  session: Omit<WorkoutSession, "exercises">
 ): Promise<void> {
   await execute(
     `INSERT INTO workout_sessions
@@ -278,32 +276,32 @@ export async function updateSession(
   const params: any[] = [];
 
   if (updates.name !== undefined) {
-    setParts.push('name = ?');
+    setParts.push("name = ?");
     params.push(updates.name);
   }
 
   if (updates.endTime !== undefined) {
-    setParts.push('end_time = ?');
+    setParts.push("end_time = ?");
     params.push(updates.endTime);
   }
 
   if (updates.duration !== undefined) {
-    setParts.push('duration = ?');
+    setParts.push("duration = ?");
     params.push(updates.duration);
   }
 
   if (updates.notes !== undefined) {
-    setParts.push('notes = ?');
+    setParts.push("notes = ?");
     params.push(updates.notes);
   }
 
-  setParts.push('updated_at = ?');
+  setParts.push("updated_at = ?");
   params.push(updates.updatedAt);
 
   params.push(id);
 
   await execute(
-    `UPDATE workout_sessions SET ${setParts.join(', ')} WHERE id = ?`,
+    `UPDATE workout_sessions SET ${setParts.join(", ")} WHERE id = ?`,
     params
   );
 }
@@ -330,14 +328,14 @@ export async function completeSession(
   const duration = Math.floor((endTime - session.startTime) / 1000); // Duration in seconds
 
   await execute(
-    'UPDATE workout_sessions SET end_time = ?, duration = ?, updated_at = ? WHERE id = ?',
+    "UPDATE workout_sessions SET end_time = ?, duration = ?, updated_at = ? WHERE id = ?",
     [endTime, duration, Date.now(), id]
   );
 
   // If this is a program workout, log history and advance day
   if (session.programId && session.programDayId) {
     // Import here to avoid circular dependency
-    const { logProgramHistory, advanceProgramDay } = await import('./programs');
+    const { logProgramHistory, advanceProgramDay } = await import("./programs");
 
     await logProgramHistory({
       programId: session.programId,
@@ -360,7 +358,7 @@ export async function completeSession(
  * @returns Promise that resolves when session is deleted
  */
 export async function deleteSession(id: string): Promise<void> {
-  await execute('DELETE FROM workout_sessions WHERE id = ?', [id]);
+  await execute("DELETE FROM workout_sessions WHERE id = ?", [id]);
 }
 
 /**
@@ -393,7 +391,7 @@ export async function getExercisesBySessionId(
  */
 export async function getExerciseById(id: string): Promise<Exercise | null> {
   const row = await getOne<ExerciseRow>(
-    'SELECT * FROM exercises WHERE id = ?',
+    "SELECT * FROM exercises WHERE id = ?",
     [id]
   );
 
@@ -407,7 +405,7 @@ export async function getExerciseById(id: string): Promise<Exercise | null> {
  * @returns Promise that resolves when exercise is created
  */
 export async function createExercise(
-  exercise: Omit<Exercise, 'sets'>
+  exercise: Omit<Exercise, "sets">
 ): Promise<void> {
   await execute(
     `INSERT INTO exercises
@@ -445,7 +443,7 @@ export async function updateExercise(
   const params: any[] = [];
 
   if (updates.name !== undefined) {
-    setParts.push('name = ?');
+    setParts.push("name = ?");
     params.push(updates.name);
   }
 
@@ -455,17 +453,17 @@ export async function updateExercise(
   }
 
   if (updates.notes !== undefined) {
-    setParts.push('notes = ?');
+    setParts.push("notes = ?");
     params.push(updates.notes);
   }
 
-  setParts.push('updated_at = ?');
+  setParts.push("updated_at = ?");
   params.push(updates.updatedAt);
 
   params.push(id);
 
   await execute(
-    `UPDATE exercises SET ${setParts.join(', ')} WHERE id = ?`,
+    `UPDATE exercises SET ${setParts.join(", ")} WHERE id = ?`,
     params
   );
 }
@@ -479,7 +477,7 @@ export async function updateExercise(
  * @returns Promise that resolves when exercise is deleted
  */
 export async function deleteExercise(id: string): Promise<void> {
-  await execute('DELETE FROM exercises WHERE id = ?', [id]);
+  await execute("DELETE FROM exercises WHERE id = ?", [id]);
 }
 
 /**
@@ -491,7 +489,7 @@ export async function deleteExercise(id: string): Promise<void> {
  * @returns Promise that resolves when exercises are reordered
  */
 export async function reorderExercises(
-  exerciseOrders: Array<{ id: string; order: number }>
+  exerciseOrders: { id: string; order: number }[]
 ): Promise<void> {
   const now = Date.now();
   const statements = exerciseOrders.map(({ id, order }) => ({

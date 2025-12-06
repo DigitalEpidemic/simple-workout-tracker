@@ -5,32 +5,33 @@
  * Options: 7 days, 30 days, 90 days, 1 year, All time
  */
 
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { Spacing, BorderRadius } from '@/constants/theme';
-import { useColorScheme } from 'react-native';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
+import React from "react";
+import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 
-export type TimeRange = '7d' | '30d' | '90d' | '1y' | 'all';
+export type TimeRange = "7d" | "30d" | "90d" | "1y" | "all";
 
 interface TimeRangeSelectorProps {
   selected: TimeRange;
   onChange: (range: TimeRange) => void;
 }
 
-const TIME_RANGE_OPTIONS: Array<{ value: TimeRange; label: string }> = [
-  { value: '7d', label: '7D' },
-  { value: '30d', label: '30D' },
-  { value: '90d', label: '90D' },
-  { value: '1y', label: '1Y' },
-  { value: 'all', label: 'All' },
+const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
+  { value: "7d", label: "7D" },
+  { value: "30d", label: "30D" },
+  { value: "90d", label: "90D" },
+  { value: "1y", label: "1Y" },
+  { value: "all", label: "All" },
 ];
 
-export function TimeRangeSelector({ selected, onChange }: TimeRangeSelectorProps) {
+export function TimeRangeSelector({
+  selected,
+  onChange,
+}: TimeRangeSelectorProps) {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? "light"];
 
   return (
     <ThemedView style={styles.container}>
@@ -42,7 +43,9 @@ export function TimeRangeSelector({ selected, onChange }: TimeRangeSelectorProps
             style={[
               styles.button,
               {
-                backgroundColor: isSelected ? colors.primary : colors.backgroundTertiary,
+                backgroundColor: isSelected
+                  ? colors.primary
+                  : colors.backgroundTertiary,
               },
             ]}
             onPress={() => onChange(option.value)}
@@ -66,8 +69,8 @@ export function TimeRangeSelector({ selected, onChange }: TimeRangeSelectorProps
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     padding: Spacing.md,
     gap: Spacing.xs,
   },
@@ -76,10 +79,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xs,
     borderRadius: BorderRadius.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

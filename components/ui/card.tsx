@@ -1,15 +1,9 @@
-import React from 'react';
-import { View, StyleSheet, type ViewProps } from 'react-native';
-import {
-  Colors,
-  Spacing,
-  BorderRadius,
-  Shadows,
-  ComponentTokens,
-} from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors, ComponentTokens, Shadows, Spacing } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import React from "react";
+import { StyleSheet, View, type ViewProps } from "react-native";
 
-export type CardVariant = 'elevated' | 'outlined' | 'filled';
+export type CardVariant = "elevated" | "outlined" | "filled";
 
 export interface CardProps extends ViewProps {
   variant?: CardVariant;
@@ -18,35 +12,35 @@ export interface CardProps extends ViewProps {
 }
 
 export function Card({
-  variant = 'elevated',
-  padding = 'md',
+  variant = "elevated",
+  padding = "md",
   children,
   style,
   ...props
 }: CardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
   const getBackgroundColor = () => {
     switch (variant) {
-      case 'filled':
+      case "filled":
         return colors.backgroundSecondary;
-      case 'elevated':
-      case 'outlined':
+      case "elevated":
+      case "outlined":
       default:
         return colors.background;
     }
   };
 
   const getBorderColor = () => {
-    if (variant === 'outlined') {
+    if (variant === "outlined") {
       return colors.border;
     }
-    return 'transparent';
+    return "transparent";
   };
 
   const getShadow = () => {
-    if (variant === 'elevated') {
+    if (variant === "elevated") {
       return Shadows.md;
     }
     return Shadows.none;
@@ -59,7 +53,7 @@ export function Card({
         {
           backgroundColor: getBackgroundColor(),
           borderColor: getBorderColor(),
-          borderWidth: variant === 'outlined' ? 1 : 0,
+          borderWidth: variant === "outlined" ? 1 : 0,
           borderRadius: ComponentTokens.card.borderRadius,
           padding: Spacing[padding],
         },
@@ -75,6 +69,6 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    overflow: 'hidden',
+    overflow: "hidden",
   },
 });

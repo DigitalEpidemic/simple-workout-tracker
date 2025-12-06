@@ -4,12 +4,11 @@
  * Handles fetching exercise performance history across workouts.
  */
 
-import { WorkoutSet } from '@/types';
 import {
   getExerciseHistory,
   getSetsByExerciseAndSession,
-  ExerciseHistoryRow,
-} from '@/src/lib/db/repositories/sets';
+} from "@/src/lib/db/repositories/sets";
+import { WorkoutSet } from "@/types";
 
 /**
  * Exercise performance summary for a single workout

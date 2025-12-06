@@ -7,17 +7,21 @@
  * TODO Phase 8.6.2: Implement this component when ready to add filtering
  */
 
-import React from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { Colors, Spacing, BorderRadius, FontSizes } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { AnalyticsFilter, AnalyticsFilterType, getFilterLabel } from '../types/filters';
+import { ThemedText } from "@/components/themed-text";
+import { BorderRadius, Colors, FontSizes, Spacing } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import React from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import {
+  AnalyticsFilter,
+  AnalyticsFilterType,
+  getFilterLabel,
+} from "../types/filters";
 
 export interface FilterSelectorProps {
   selectedFilter: AnalyticsFilter;
   onFilterChange: (filter: AnalyticsFilter) => void;
-  availablePrograms?: Array<{ id: string; name: string }>; // For program dropdown
+  availablePrograms?: { id: string; name: string }[]; // For program dropdown
 }
 
 /**
@@ -32,10 +36,15 @@ export function FilterSelector({
   onFilterChange,
   availablePrograms = [],
 }: FilterSelectorProps) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
-  const filterTypes: AnalyticsFilterType[] = ['all', 'program', 'template', 'free'];
+  const filterTypes: AnalyticsFilterType[] = [
+    "all",
+    "program",
+    "template",
+    "free",
+  ];
 
   const handleFilterPress = (type: AnalyticsFilterType) => {
     onFilterChange({ type });
@@ -44,7 +53,12 @@ export function FilterSelector({
   return (
     <View style={styles.container}>
       <ThemedText style={styles.label}>Filter By</ThemedText>
-      <View style={[styles.segmentedControl, { backgroundColor: colors.backgroundSecondary }]}>
+      <View
+        style={[
+          styles.segmentedControl,
+          { backgroundColor: colors.backgroundSecondary },
+        ]}
+      >
         {filterTypes.map((type) => {
           const isSelected = selectedFilter.type === type;
           return (
@@ -59,7 +73,7 @@ export function FilterSelector({
               <ThemedText
                 style={[
                   styles.segmentText,
-                  { color: isSelected ? '#FFFFFF' : colors.text },
+                  { color: isSelected ? "#FFFFFF" : colors.text },
                 ]}
               >
                 {getFilterLabel({ type })}
@@ -70,9 +84,11 @@ export function FilterSelector({
       </View>
 
       {/* TODO: Add program picker when selectedFilter.type === 'program' */}
-      {selectedFilter.type === 'program' && availablePrograms.length > 0 && (
+      {selectedFilter.type === "program" && availablePrograms.length > 0 && (
         <View style={styles.programPicker}>
-          <ThemedText style={[styles.pickerLabel, { color: colors.textSecondary }]}>
+          <ThemedText
+            style={[styles.pickerLabel, { color: colors.textSecondary }]}
+          >
             Select a program to filter (not yet implemented)
           </ThemedText>
           {/* TODO: Implement program picker dropdown */}
@@ -89,11 +105,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: Spacing.sm,
   },
   segmentedControl: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: BorderRadius.md,
     padding: 4,
     gap: 4,
@@ -103,18 +119,18 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xs,
     borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   segmentText: {
     fontSize: FontSizes.xs,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   programPicker: {
     marginTop: Spacing.md,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
-    backgroundColor: '#FFF3CD',
+    backgroundColor: "#FFF3CD",
   },
   pickerLabel: {
     fontSize: FontSizes.sm,
