@@ -15,18 +15,6 @@ import ProgramBuilderScreen from "../program-builder";
 // Mocks
 // ----------------------------------------------------------------------------
 
-jest.mock("expo-router", () => {
-  const { useEffect } = jest.requireActual("react");
-  return {
-    useRouter: jest.fn(),
-    useLocalSearchParams: jest.fn(),
-    useFocusEffect: (cb: any) =>
-      useEffect(() => {
-        cb();
-      }, [cb]),
-  };
-});
-
 jest.mock("@/src/features/programs/api/programService");
 
 // ----------------------------------------------------------------------------

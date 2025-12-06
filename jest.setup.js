@@ -37,24 +37,30 @@ jest.mock("expo-sqlite", () => ({
 }));
 
 // Mock expo-router (not included in jest-expo)
-jest.mock("expo-router", () => ({
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-    canGoBack: jest.fn(() => true),
-  })),
-  useLocalSearchParams: jest.fn(() => ({})),
-  useSegments: jest.fn(() => []),
-  usePathname: jest.fn(() => "/"),
-  useFocusEffect: jest.fn((callback) => callback()),
-  Link: "Link",
-  router: {
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-  },
-}));
+jest.mock("expo-router", () => {
+  const { useEffect } = jest.requireActual("react");
+
+  return {
+    // Pass through any other exports you might need (optional but safer)
+    ...jest.requireActual("expo-router"),
+    useRouter: jest.fn(() => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+      canGoBack: jest.fn(() => true),
+    })),
+    useLocalSearchParams: jest.fn(() => ({})),
+    useSegments: jest.fn(() => []),
+    usePathname: jest.fn(() => "/"),
+    useFocusEffect: (cb) => useEffect(cb, [cb]),
+    Link: "Link",
+    router: {
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+    },
+  };
+});
 
 // Mock react-native-chart-kit (third-party library)
 jest.mock("react-native-chart-kit", () => ({

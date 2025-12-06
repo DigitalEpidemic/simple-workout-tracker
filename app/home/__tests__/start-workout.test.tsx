@@ -22,11 +22,6 @@ import StartWorkoutScreen from "../start-workout";
 // Mocks
 // ----------------------------------------------------------------------------
 
-jest.mock("expo-router", () => ({
-  useRouter: jest.fn(),
-  useLocalSearchParams: jest.fn(),
-}));
-
 jest.mock("@/src/features/templates/api/templateService");
 jest.mock("@/src/features/workouts/api/workoutService");
 jest.mock("@/src/lib/db/repositories/programs");

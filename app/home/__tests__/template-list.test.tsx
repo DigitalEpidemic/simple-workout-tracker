@@ -15,14 +15,6 @@ import TemplateListScreen from "../template-list";
 // Mocks
 // ----------------------------------------------------------------------------
 
-jest.mock("expo-router", () => ({
-  useRouter: jest.fn(),
-  useFocusEffect: jest.fn((callback) => {
-    const React = jest.requireActual("react");
-    React.useEffect(callback, []);
-  }),
-}));
-
 jest.mock("@/src/features/templates/api/templateService");
 
 // Mock TemplateCard to expose specific interactions for testing
